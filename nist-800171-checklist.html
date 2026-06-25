@@ -398,6 +398,93 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 /* ── Table scroll wrapper ── */
 .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 
+/* ── Walkthrough Tour ── */
+.tour-backdrop {
+  position:fixed; inset:0; background:rgba(15,15,35,.72); z-index:1000;
+  display:flex; align-items:center; justify-content:center; padding:16px;
+  backdrop-filter:blur(2px);
+  animation:tourFadeIn .2s ease;
+}
+.tour-backdrop.hidden { display:none; }
+@keyframes tourFadeIn { from{opacity:0} to{opacity:1} }
+
+.tour-card {
+  background:#fff; border-radius:16px; width:100%; max-width:520px;
+  overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.35);
+  animation:tourSlideUp .25s ease;
+}
+@keyframes tourSlideUp { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+.tour-card-header {
+  padding:28px 28px 20px;
+  background:linear-gradient(135deg,#1a1a2e 0%,#4f46e5 100%);
+  color:#fff; position:relative;
+}
+.tour-card-step-pill {
+  display:inline-block; background:rgba(255,255,255,.2); border-radius:20px;
+  font-size:10px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+  padding:3px 10px; margin-bottom:12px;
+}
+.tour-card-header h2 { font-size:18px; margin:0 0 6px; line-height:1.3; }
+.tour-card-header p  { font-size:13px; margin:0; opacity:.8; line-height:1.5; }
+.tour-card-icon { font-size:32px; margin-bottom:10px; display:block; }
+
+.tour-card-body { padding:20px 28px 24px; }
+.tour-feature-list { list-style:none; padding:0; margin:0 0 4px; }
+.tour-feature-list li {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:9px 0; border-bottom:1px solid #f1f5f9; font-size:13px; color:#334155; line-height:1.5;
+}
+.tour-feature-list li:last-child { border-bottom:none; }
+.tour-feature-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+
+.tour-progress-dots {
+  display:flex; gap:6px; justify-content:center; padding:12px 0 0;
+}
+.tour-dot {
+  width:7px; height:7px; border-radius:50%; background:#e2e8f0; transition:background .2s;
+}
+.tour-dot.active { background:#4f46e5; width:20px; border-radius:4px; }
+
+.tour-card-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 28px 20px; gap:10px;
+}
+.tour-skip-btn {
+  background:none; border:none; font-size:12px; color:#94a3b8; cursor:pointer; padding:6px 0;
+}
+.tour-skip-btn:hover { color:#64748b; }
+.tour-nav-btns { display:flex; gap:8px; }
+.tour-prev-btn {
+  border:1px solid #e2e8f0; background:#fff; border-radius:8px;
+  padding:9px 18px; font-size:13px; font-weight:600; color:#64748b; cursor:pointer;
+  transition:all .15s;
+}
+.tour-prev-btn:hover { border-color:#6366f1; color:#4f46e5; }
+.tour-next-btn {
+  background:#4f46e5; border:none; border-radius:8px;
+  padding:9px 22px; font-size:13px; font-weight:700; color:#fff; cursor:pointer;
+  transition:background .15s;
+}
+.tour-next-btn:hover { background:#4338ca; }
+
+/* Help button in top bar */
+.tour-help-btn {
+  border:1px solid rgba(255,255,255,.25); background:transparent;
+  color:rgba(255,255,255,.75); border-radius:20px; padding:4px 12px;
+  font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;
+  transition:all .15s;
+}
+.tour-help-btn:hover { background:rgba(255,255,255,.15); color:#fff; }
+
+@media (max-width: 768px) {
+  .tour-card-header { padding:20px 20px 16px; }
+  .tour-card-header h2 { font-size:16px; }
+  .tour-card-body { padding:16px 20px 18px; }
+  .tour-card-footer { padding:10px 20px 16px; }
+  .tour-feature-list li { font-size:12px; }
+}
+
 /* ══════════════════════════════════════════════
    MOBILE — max-width: 768px
 ══════════════════════════════════════════════ */
@@ -549,6 +636,7 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
         <button class="mode-btn" id="btnAudit" onclick="setMode('auditor')">Auditor (800-171A)</button>
         <button class="mode-btn" id="btnTpl" onclick="setMode('templates')">Evidence Templates</button>
       </div>
+      <button class="tour-help-btn" onclick="startTour()">❓ Tour</button>
       <div class="conn-pill connecting" id="connPill">
         <div class="conn-dot"></div>
         <span id="connLabel">Connecting…</span>
@@ -3121,6 +3209,170 @@ function wizardRestart() {
 
 // Boot
 initSupabase();
+
+// ═══════════════════════════════════════════════════════════
+// Walkthrough Tour
+// ═══════════════════════════════════════════════════════════
+const TOUR_STEPS = [
+  {
+    icon: '👋',
+    label: 'Welcome',
+    title: 'Welcome to CMMC Toolkit',
+    subtitle: 'A free tool to guide your CMMC Level 2 / NIST SP 800-171 compliance journey — no consultant required.',
+    features: [
+      { icon: '🔓', text: '<strong>Free & open-source</strong> — no login, no subscription, no data leaves your browser.' },
+      { icon: '💾', text: '<strong>Saves automatically</strong> — your progress is stored locally in this browser.' },
+      { icon: '📋', text: '<strong>110 controls · 320 objectives</strong> covering every CMMC Level 2 requirement.' },
+    ]
+  },
+  {
+    icon: '🧭',
+    label: 'Gap Wizard',
+    title: 'Gap Wizard — Start Here',
+    subtitle: 'The fastest way to understand where you stand. The wizard walks through every incomplete control, highest impact first.',
+    features: [
+      { icon: '📖', text: '<strong>Plain English</strong> — each control is explained in plain language, not government jargon.' },
+      { icon: '⚡', text: '<strong>Prioritized by SPRS points</strong> — fix 5-point controls first for the biggest score jump.' },
+      { icon: '✅', text: '<strong>Mark complete</strong> — checking off a control instantly updates your SPRS score.' },
+    ]
+  },
+  {
+    icon: '📋',
+    label: 'Organization',
+    title: 'Organization Mode',
+    subtitle: 'Your master control list. Track implementation status across all 110 controls, grouped by control family.',
+    features: [
+      { icon: '🔍', text: '<strong>Filter & search</strong> — find controls by domain, status (Not Started / In Progress / Complete), or keyword.' },
+      { icon: '📝', text: '<strong>Evidence notes</strong> — add implementation notes to each control for your SSP.' },
+      { icon: '📊', text: '<strong>Progress bars</strong> — see completion percentage per control family at a glance.' },
+    ]
+  },
+  {
+    icon: '📊',
+    label: 'SPRS Score',
+    title: 'SPRS Score Calculator',
+    subtitle: 'Your DoD Supplier Performance Risk System score, calculated in real time using the official DoD methodology.',
+    features: [
+      { icon: '🎯', text: '<strong>Score range −203 to +110</strong> — you need 88+ to be conditionally eligible for CMMC Level 2.' },
+      { icon: '🏆', text: '<strong>Remediation table</strong> — sorted by point value so you always tackle the highest-impact gaps first.' },
+      { icon: '⚙️', text: '<strong>Partial credit</strong> — MFA (3.5.3) and FIPS encryption (3.13.11) offer partial credit options.' },
+    ]
+  },
+  {
+    icon: '🔍',
+    label: 'Auditor Mode',
+    title: 'Auditor Mode (800-171A)',
+    subtitle: 'Expands to all 320 assessment objectives — the exact criteria a C3PAO assessor will use during a formal audit.',
+    features: [
+      { icon: '👁️', text: '<strong>Dual tracking</strong> — log your self-assessment status separately from what an auditor finds.' },
+      { icon: '📌', text: '<strong>320 objectives</strong> derived directly from NIST SP 800-171A (the assessment guide).' },
+      { icon: '🧪', text: '<strong>Audit prep</strong> — work through every objective before your C3PAO engagement to avoid surprises.' },
+    ]
+  },
+  {
+    icon: '📄',
+    label: 'Evidence Templates',
+    title: 'Evidence Templates',
+    subtitle: 'Generate the audit documents you need — pre-filled from your checklist data.',
+    features: [
+      { icon: '📋', text: '<strong>System Security Plan (SSP)</strong> — mandatory before any C3PAO assessment. Auto-populates from your control data.' },
+      { icon: '📌', text: '<strong>POA&M</strong> — documents all open gaps with remediation plans. Required by DFARS 252.204-7020.' },
+      { icon: '📜', text: '<strong>14 Policy Documents</strong> — full draft language for every NIST control family policy, ready to customize and sign.' },
+    ]
+  },
+  {
+    icon: '🚀',
+    label: "You're Ready",
+    title: "You're Ready to Start",
+    subtitle: "Begin with the Gap Wizard to see where you stand, then use Organization mode to track your progress as you implement controls.",
+    features: [
+      { icon: '💡', text: '<strong>Recommended workflow:</strong> Gap Wizard → Organization → SPRS Score → Auditor → Evidence Templates.' },
+      { icon: '❓', text: '<strong>Relaunch this tour</strong> any time by clicking the <strong>❓ Tour</strong> button in the top bar.' },
+      { icon: '⭐', text: '<strong>Open source</strong> — found a bug or want to contribute? Visit <a href="https://github.com/Configurellc/CMMC-Toolkit" target="_blank" style="color:#4f46e5">github.com/Configurellc/CMMC-Toolkit</a>.' },
+    ]
+  }
+];
+
+let tourStep = 0;
+
+function buildTourCard() {
+  const s = TOUR_STEPS[tourStep];
+  const total = TOUR_STEPS.length;
+  const isLast = tourStep === total - 1;
+  const isFirst = tourStep === 0;
+
+  const dots = TOUR_STEPS.map((_,i) =>
+    `<div class="tour-dot${i===tourStep?' active':''}"></div>`
+  ).join('');
+
+  const featureItems = s.features.map(f =>
+    `<li><span class="tour-feature-icon">${f.icon}</span><span>${f.text}</span></li>`
+  ).join('');
+
+  document.getElementById('tourBackdrop').innerHTML = `
+    <div class="tour-card" role="dialog" aria-modal="true" aria-label="${s.title}">
+      <div class="tour-card-header">
+        <span class="tour-card-icon">${s.icon}</span>
+        <div class="tour-card-step-pill">Step ${tourStep+1} of ${total} — ${s.label}</div>
+        <h2>${s.title}</h2>
+        <p>${s.subtitle}</p>
+      </div>
+      <div class="tour-card-body">
+        <ul class="tour-feature-list">${featureItems}</ul>
+        <div class="tour-progress-dots">${dots}</div>
+      </div>
+      <div class="tour-card-footer">
+        <button class="tour-skip-btn" onclick="endTour()">Skip tour</button>
+        <div class="tour-nav-btns">
+          ${!isFirst ? `<button class="tour-prev-btn" onclick="tourNav(${tourStep-1})">← Back</button>` : ''}
+          <button class="tour-next-btn" onclick="${isLast ? 'endTour()' : `tourNav(${tourStep+1})`}">
+            ${isLast ? 'Get Started →' : 'Next →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function tourNav(idx) {
+  tourStep = idx;
+  buildTourCard();
+}
+
+function startTour() {
+  tourStep = 0;
+  document.getElementById('tourBackdrop').classList.remove('hidden');
+  buildTourCard();
+}
+
+function endTour() {
+  document.getElementById('tourBackdrop').classList.add('hidden');
+  localStorage.setItem('cmmc_tour_done', '1');
+}
+
+// Close on backdrop click
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'tourBackdrop') endTour();
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  const backdrop = document.getElementById('tourBackdrop');
+  if (backdrop.classList.contains('hidden')) return;
+  if (e.key === 'ArrowRight' && tourStep < TOUR_STEPS.length - 1) tourNav(tourStep + 1);
+  if (e.key === 'ArrowLeft' && tourStep > 0) tourNav(tourStep - 1);
+  if (e.key === 'Escape') endTour();
+});
+
+// Auto-show on first visit
+if (!localStorage.getItem('cmmc_tour_done')) {
+  // slight delay so the page loads first
+  setTimeout(startTour, 800);
+}
 </script>
+
+<!-- Tour backdrop -->
+<div class="tour-backdrop hidden" id="tourBackdrop"></div>
+
 </body>
 </html>
