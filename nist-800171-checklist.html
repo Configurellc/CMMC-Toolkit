@@ -411,11 +411,11 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
     </div>
     <div class="top-right">
       <div class="mode-toggle">
-        <button class="mode-btn active" id="btnOrg" onclick="setMode('org')">Organization</button>
-        <button class="mode-btn" id="btnAudit" onclick="setMode('auditor')">Auditor (800-171A)</button>
+        <button class="mode-btn active" id="btnWizard" onclick="setMode('wizard')">🧭 Gap Wizard</button>
+        <button class="mode-btn" id="btnOrg" onclick="setMode('org')">Organization</button>
         <button class="mode-btn" id="btnSPRS" onclick="setMode('sprs')">SPRS Score</button>
+        <button class="mode-btn" id="btnAudit" onclick="setMode('auditor')">Auditor (800-171A)</button>
         <button class="mode-btn" id="btnTpl" onclick="setMode('templates')">Evidence Templates</button>
-        <button class="mode-btn" id="btnWizard" onclick="setMode('wizard')">🧭 Gap Wizard</button>
       </div>
       <div class="conn-pill connecting" id="connPill">
         <div class="conn-dot"></div>
@@ -818,7 +818,7 @@ let orgStatus = {};      // control_id → not-started|in-progress|complete
 let auditStatus = {};    // objective_id → not-reviewed|met|not-met|not-applicable
 let db = null;
 let configured = false;
-let currentMode = 'org';
+let currentMode = 'wizard';
 let orgFilter = 'all';
 let auditFilter = 'all';
 let expandedEvidence = new Set();
@@ -845,6 +845,7 @@ async function initSupabase() {
     buildOrgView();
     buildAuditView();
     updateAllProgress();
+    setMode('wizard');
     return;
   }
   configured = true;
