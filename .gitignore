@@ -1,0 +1,18 @@
+# Backups
+*.bak
+*.backup
+
+# JVM internal files (not part of this project)
+JVM_Sales_Site.pdf
+JVM_Sales_Site_Schema.docx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+
+# Logs
+*.log

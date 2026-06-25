@@ -1,0 +1,7 @@
+services:
+  cmmc-checklist:
+    build: .
+    container_name: cmmc-checklist
+    ports:
+      - "8080:80"       # Change 8080 to any available port on your machine
+    restart: unless-stopped
