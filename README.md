@@ -4,7 +4,7 @@
 
 Built for micro to small businesses in the Defense Industrial Base (DIB) who handle Controlled Unclassified Information (CUI) and need to achieve CMMC Level 2 certification — without paying $10,000+ for a consultant.
 
-🔗 **[Live App](https://cmmc-toolkit.netlify.app)** *(coming soon)*
+🔗 **[Live App](https://cmmctoolkit.netlify.app)** *(coming soon)*
 
 ---
 
