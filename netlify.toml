@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/"
+  to = "/nist-800171-checklist.html"
+  status = 200
