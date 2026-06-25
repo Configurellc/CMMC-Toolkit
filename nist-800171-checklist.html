@@ -59,11 +59,6 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 @keyframes spin{ to{ transform:rotate(360deg); } }
 .loading-text{ font-size:13px; color:#64748b; }
 
-/* Setup banner */
-.setup-banner{ background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:14px 18px; margin:16px 20px; font-size:13px; line-height:1.7; display:none; }
-.setup-banner.visible{ display:block; }
-.setup-banner strong{ color:#92400e; }
-.setup-banner code{ background:#fde68a; padding:1px 6px; border-radius:3px; font-size:11px; font-family:monospace; }
 
 /* ── Controls bar ── */
 .controls-bar{ background:#fff; border-bottom:1px solid #e2e8f0; padding:10px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:sticky; top:95px; z-index:99; }
@@ -448,15 +443,6 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
   </div>
 </div>
 
-<div class="setup-banner" id="setupBanner">
-  <strong>⚙️ First-time setup — two SQL tables needed in Supabase:</strong><br><br>
-  <strong>Step 1:</strong> Open your Supabase project → <strong>SQL Editor</strong> and run:<br>
-  <code>CREATE TABLE IF NOT EXISTS checklist_status (control_id TEXT PRIMARY KEY, status TEXT NOT NULL DEFAULT 'not-started', updated_at TIMESTAMPTZ DEFAULT NOW());</code><br>
-  <code>CREATE TABLE IF NOT EXISTS assessment_objectives (objective_id TEXT PRIMARY KEY, status TEXT NOT NULL DEFAULT 'not-reviewed', updated_at TIMESTAMPTZ DEFAULT NOW());</code><br>
-  <code>ALTER TABLE checklist_status ENABLE ROW LEVEL SECURITY; CREATE POLICY "Allow all" ON checklist_status FOR ALL USING (true) WITH CHECK (true);</code><br>
-  <code>ALTER TABLE assessment_objectives ENABLE ROW LEVEL SECURITY; CREATE POLICY "Allow all" ON assessment_objectives FOR ALL USING (true) WITH CHECK (true);</code><br><br>
-  <strong>Step 2:</strong> Go to <strong>Settings → API</strong>, copy your <strong>Project URL</strong> and <strong>anon key</strong>, paste them at the top of this file, and re-upload to Netlify.
-</div>
 
 <div class="controls-bar">
   <input class="search-box" type="text" id="searchBox" placeholder="🔍 Search…" oninput="applyFilters()">
@@ -855,9 +841,7 @@ function setConn(state, label) {
 
 async function initSupabase() {
   if (!isConfigured()) {
-    document.getElementById('setupBanner').classList.add('visible');
     document.getElementById('loadingOverlay').classList.add('hidden');
-    setConn('error','Not configured');
     buildOrgView();
     buildAuditView();
     updateAllProgress();
