@@ -403,6 +403,27 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .wiz-done h3 { font-size:18px; color:#1e293b; margin:0 0 8px; }
 .wiz-done p { font-size:13px; color:#64748b; margin:0 0 24px; }
 
+/* ── Company Logo ── */
+.logo-upload-card { background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.logo-preview-wrap { width:120px; height:60px; border:2px dashed #e2e8f0; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; background:#f8fafc; transition:border-color .15s; }
+.logo-preview-wrap.has-logo { border-style:solid; border-color:#e2e8f0; background:#fff; }
+.logo-preview-wrap img { max-width:100%; max-height:100%; object-fit:contain; }
+.logo-upload-placeholder { font-size:11px; color:#94a3b8; text-align:center; line-height:1.4; padding:4px; }
+.logo-upload-info { flex:1; min-width:180px; }
+.logo-upload-info h4 { font-size:13px; font-weight:700; color:#1a1a2e; margin:0 0 3px; }
+.logo-upload-info p { font-size:11px; color:#64748b; margin:0 0 10px; line-height:1.5; }
+.logo-upload-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.logo-upload-btn { display:inline-flex; align-items:center; gap:5px; border:1px solid #6366f1; background:#fff; color:#6366f1; border-radius:6px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; }
+.logo-upload-btn:hover { background:#6366f1; color:#fff; }
+.logo-remove-btn { border:1px solid #e2e8f0; background:#fff; color:#94a3b8; border-radius:6px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; }
+.logo-remove-btn:hover { border-color:#ef4444; color:#ef4444; }
+.logo-error { font-size:11px; color:#ef4444; margin-top:6px; display:none; }
+.logo-error.visible { display:block; }
+
+/* Logo in document headers */
+.doc-logo { max-height:48px; max-width:160px; object-fit:contain; display:block; }
+.doc-header-brand { display:flex; align-items:center; gap:14px; }
+
 /* ── Table scroll wrapper ── */
 .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 
@@ -1366,6 +1387,14 @@ function updateAuditCtrlHeader(ctrlId) {
 // ═══════════════════════════════════════════════════════════
 function buildOrgView() {
   const container = document.getElementById('orgView');
+
+  // Logo upload card
+  const logoCard = document.createElement('div');
+  logoCard.id = 'logoUploadCard';
+  logoCard.className = 'logo-upload-card';
+  logoCard.innerHTML = buildLogoCardHTML();
+  container.appendChild(logoCard);
+
   DOMAINS.forEach(domain => {
     const meta = DOMAIN_META[domain];
     const dc = CONTROLS.filter(c=>c.domain===domain);
@@ -1867,7 +1896,10 @@ function buildSSPView(org, complete) {
     </div>
 
     <div class="ssp-header">
-      <h3>System Information &amp; Organization Details</h3>
+      <div class="doc-header-brand" style="margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid #1a1a2e">
+        ${logoImgTag(48)}
+        <h3 style="margin:0;border:none;padding:0">System Information &amp; Organization Details</h3>
+      </div>
       <div class="ssp-fields">
         <div class="ssp-field"><label>Organization Name</label>
           <input type="text" value="${escHtml(orgName)}" placeholder="Your company or organization name"
@@ -1986,7 +2018,8 @@ function buildPOAMView(org, incomplete, fivePt, threePt, onePt) {
     </div>
 
     <div class="poam-table-wrap">
-      <div class="poam-table-hdr">
+      <div class="poam-table-hdr" style="display:flex;align-items:center;gap:12px">
+        ${logoImgTag(36)}
         <h3>POA&amp;M — ${orgName} &nbsp;·&nbsp; NIST SP 800-171 Rev 2 &nbsp;·&nbsp; Assessment Date: ${sspDate}</h3>
       </div>
       <div style="overflow-x:auto">
@@ -2112,6 +2145,13 @@ function printPOAM() {
 }
 
 function openPrint(title, body) {
+  const logo = getLogo();
+  const logoHtml = logo
+    ? `<div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #1a1a2e">
+        <img src="${logo}" style="max-height:52px;max-width:180px;object-fit:contain">
+        <div style="font-size:9pt;color:#555">${escHtml(getTplOrg().orgName||'')}</div>
+       </div>`
+    : '';
   const win = window.open('','_blank','width=1000,height=750');
   win.document.write(`<!DOCTYPE html><html><head><title>${escHtml(title)}</title>
     <style>
@@ -2119,7 +2159,7 @@ function openPrint(title, body) {
       @media print{body{margin:10mm}}
       h1,h2{margin-top:0}
       table{page-break-inside:avoid}
-    </style></head><body>${body}</body></html>`);
+    </style></head><body>${logoHtml}${body}</body></html>`);
   win.document.close();
   win.focus();
   setTimeout(()=>win.print(), 600);
@@ -2664,9 +2704,12 @@ function buildPolicyDoc(org, polId) {
 
       <!-- Meta fields -->
       <div class="pol-doc-meta">
-        <div class="pol-meta-cell">
-          <div class="pol-meta-label">Organization</div>
-          <div class="pol-meta-val">${escHtml(orgName)}</div>
+        <div class="pol-meta-cell" style="display:flex;align-items:center;gap:12px">
+          ${logoImgTag(40)}
+          <div>
+            <div class="pol-meta-label">Organization</div>
+            <div class="pol-meta-val">${escHtml(orgName)}</div>
+          </div>
         </div>
         <div class="pol-meta-cell">
           <div class="pol-meta-label">Policy Version</div>
@@ -3213,6 +3256,74 @@ function wizardMarkComplete(ctrlId, idx) {
 function wizardRestart() {
   wizardStarted = false;
   buildWizardView();
+}
+
+// ═══════════════════════════════════════════════════════════
+// Company Logo
+// ═══════════════════════════════════════════════════════════
+const LOGO_KEY = 'nist_company_logo';
+const LOGO_MAX_BYTES = 500 * 1024; // 500 KB
+
+function getLogo() { return localStorage.getItem(LOGO_KEY) || ''; }
+
+function buildLogoCardHTML() {
+  const logo = getLogo();
+  return `
+    <div class="logo-preview-wrap${logo ? ' has-logo' : ''}" id="logoPreviewWrap">
+      ${logo
+        ? `<img src="${logo}" alt="Company logo" id="logoPreviewImg">`
+        : `<div class="logo-upload-placeholder">No logo<br>uploaded</div>`}
+    </div>
+    <div class="logo-upload-info">
+      <h4>Company Logo</h4>
+      <p>Appears on your SSP, POA&M, and all 14 policy documents. PNG, JPG, or SVG · max 500 KB.</p>
+      <div class="logo-upload-btns">
+        <label class="logo-upload-btn">
+          📁 ${logo ? 'Change Logo' : 'Upload Logo'}
+          <input type="file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" onchange="handleLogoUpload(this)">
+        </label>
+        ${logo ? `<button class="logo-remove-btn" onclick="removeLogo()">Remove</button>` : ''}
+      </div>
+      <div class="logo-error" id="logoError">File is too large. Please use an image under 500 KB.</div>
+    </div>
+  `;
+}
+
+function handleLogoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const errEl = document.getElementById('logoError');
+  if (file.size > LOGO_MAX_BYTES) {
+    errEl.classList.add('visible');
+    input.value = '';
+    return;
+  }
+  errEl && errEl.classList.remove('visible');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      localStorage.setItem(LOGO_KEY, e.target.result);
+    } catch(ex) {
+      alert('Could not save logo — localStorage may be full. Try a smaller image.');
+      return;
+    }
+    // Refresh logo card in place
+    const card = document.getElementById('logoUploadCard');
+    if (card) card.innerHTML = buildLogoCardHTML();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo() {
+  localStorage.removeItem(LOGO_KEY);
+  const card = document.getElementById('logoUploadCard');
+  if (card) card.innerHTML = buildLogoCardHTML();
+}
+
+function logoImgTag(maxH) {
+  const logo = getLogo();
+  if (!logo) return '';
+  return `<img src="${logo}" alt="Company logo" style="max-height:${maxH||48}px;max-width:160px;object-fit:contain;display:block">`;
 }
 
 // Boot
