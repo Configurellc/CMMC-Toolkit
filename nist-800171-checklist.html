@@ -363,6 +363,36 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .pol-overall-num { font-size:22px; font-weight:800; color:#1e293b; }
 .pol-overall-lbl { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; }
 
+/* ── System Scope ─────────────────────────────────────────── */
+.scope-wrap { max-width:760px; margin:0 auto; padding:24px 0 40px; }
+.scope-header { background:linear-gradient(135deg,#1a1a2e,#4f46e5); border-radius:14px; padding:32px 36px; color:#fff; margin-bottom:24px; }
+.scope-header h2 { margin:0 0 8px; font-size:20px; }
+.scope-header p { margin:0; font-size:13px; opacity:.8; }
+.scope-warning { background:#fef9c3; border:1px solid #fde047; border-radius:10px; padding:12px 16px; font-size:13px; color:#854d0e; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+.scope-warning.hidden { display:none; }
+.scope-section { background:#fff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; margin-bottom:20px; }
+.scope-section-header { background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:14px 20px; display:flex; align-items:center; gap:10px; }
+.scope-section-header h3 { margin:0; font-size:14px; font-weight:700; color:#1e293b; }
+.scope-section-icon { font-size:18px; }
+.scope-section-progress { margin-left:auto; font-size:11px; color:#64748b; font-weight:600; }
+.scope-q { padding:18px 20px; border-bottom:1px solid #f1f5f9; }
+.scope-q:last-child { border-bottom:none; }
+.scope-q-label { font-size:14px; font-weight:600; color:#1e293b; margin-bottom:4px; }
+.scope-q-source { font-size:11px; color:#6366f1; margin-bottom:10px; background:#eef2ff; display:inline-block; padding:2px 8px; border-radius:20px; }
+.scope-q-options { display:flex; flex-wrap:wrap; gap:8px; }
+.scope-opt { border:1.5px solid #e2e8f0; border-radius:8px; padding:7px 14px; font-size:13px; color:#475569; cursor:pointer; transition:all .15s; background:#fff; user-select:none; }
+.scope-opt:hover { border-color:#6366f1; color:#4f46e5; background:#eef2ff; }
+.scope-opt.selected { border-color:#4f46e5; background:#4f46e5; color:#fff; }
+.scope-opt.multi { }
+.scope-actions { display:flex; gap:12px; justify-content:flex-end; margin-top:24px; }
+.scope-btn { padding:10px 22px; border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
+.scope-btn.primary { background:#4f46e5; color:#fff; }
+.scope-btn.primary:hover { background:#4338ca; }
+.scope-btn.secondary { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+.scope-btn.secondary:hover { background:#e2e8f0; }
+.scope-complete-banner { background:#dcfce7; border:1px solid #86efac; border-radius:10px; padding:14px 20px; font-size:13px; color:#166534; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+.scope-complete-banner.hidden { display:none; }
+
 /* ── Gap Wizard ───────────────────────────────────────────── */
 .wiz-wrap { max-width:760px; margin:0 auto; padding:24px 0 40px; }
 .wiz-intro { background:#fff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; }
@@ -695,6 +725,9 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
     </div>
     <div class="top-right">
       <div class="mode-toggle">
+        <button class="mode-btn" id="btnScope" onclick="setMode('scope')">
+          <span class="tab-icon">🗺️</span><span class="tab-label">Scope</span>
+        </button>
         <button class="mode-btn active" id="btnWizard" onclick="setMode('wizard')">
           <span class="tab-icon">🧭</span><span class="tab-label">Gap Wizard</span>
         </button>
@@ -788,6 +821,7 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
   <div id="sprsView" style="display:none"></div>
   <div id="templatesView" style="display:none"></div>
   <div id="wizardView" style="display:none"></div>
+  <div id="scopeView" style="display:none"></div>
 </div>
 
 <script>
@@ -1249,20 +1283,23 @@ function setMode(m) {
   document.getElementById('btnSPRS').classList.toggle('active', m==='sprs');
   document.getElementById('btnTpl').classList.toggle('active', m==='templates');
   document.getElementById('btnWizard').classList.toggle('active', m==='wizard');
+  document.getElementById('btnScope').classList.toggle('active', m==='scope');
   document.getElementById('orgView').style.display        = m==='org'        ? '' : 'none';
   document.getElementById('auditView').style.display      = m==='auditor'    ? '' : 'none';
   document.getElementById('sprsView').style.display       = m==='sprs'       ? '' : 'none';
   document.getElementById('templatesView').style.display  = m==='templates'  ? '' : 'none';
   document.getElementById('wizardView').style.display     = m==='wizard'     ? '' : 'none';
+  document.getElementById('scopeView').style.display      = m==='scope'      ? '' : 'none';
   document.getElementById('orgProgRow').style.display     = m==='org'        ? '' : 'none';
   document.getElementById('auditProgRow').style.display   = m==='auditor'    ? '' : 'none';
   document.getElementById('sprsProgRow').style.display    = m==='sprs'       ? '' : 'none';
   document.getElementById('orgFilters').style.display     = (m==='org'||m==='sprs') ? '' : 'none';
   document.getElementById('auditFilters').style.display   = m==='auditor'    ? '' : 'none';
-  document.getElementById('statsGrid').style.display      = (m==='sprs'||m==='templates'||m==='wizard') ? 'none' : '';
+  document.getElementById('statsGrid').style.display      = (m==='sprs'||m==='templates'||m==='wizard'||m==='scope') ? 'none' : '';
   if (m==='sprs')      buildSPRSView();
   if (m==='templates') buildTemplatesView();
   if (m==='wizard')    buildWizardView();
+  if (m==='scope')     buildScopeView();
   updateStats();
   applyFilters();
   requestAnimationFrame(updateControlsBarTop);
@@ -3141,6 +3178,382 @@ function initWizard() {
   wizardStarted = false;
 }
 
+// ═══════════════════════════════════════════════════════════
+// System Scope
+// ═══════════════════════════════════════════════════════════
+const SCOPE_KEY = 'cmmc_scope_v1';
+const SCOPE_DONE_KEY = 'cmmc_scope_done';
+
+const SCOPE_SECTIONS = [
+  {
+    id: 'inventory',
+    icon: '🖥️',
+    title: 'Section 1 — System Inventory',
+    questions: [
+      {
+        id: 'q1_email',
+        label: 'Do you use cloud-based email?',
+        source: 'NIST SP 800-18 §2.1 — System Description; NIST SP 800-37 §2.1 — System Boundary',
+        multi: false,
+        options: ['Microsoft 365 / Exchange Online','Google Workspace','Other cloud email','On-premises email only','No email system']
+      },
+      {
+        id: 'q2_storage',
+        label: 'Do you use cloud file storage?',
+        source: 'NIST SP 800-18 §2.1 — System Description; CMMC CAP Scoping Guidance',
+        multi: true,
+        options: ['SharePoint / OneDrive','Google Drive','Dropbox / Box','AWS S3 or similar','Other cloud storage','No cloud file storage']
+      },
+      {
+        id: 'q3_servers',
+        label: 'Do you have on-premises servers?',
+        source: 'NIST SP 800-37 §2.1 — System Boundary Definition',
+        multi: false,
+        options: ['Yes — 1 to 5 servers','Yes — 6 to 20 servers','Yes — more than 20 servers','No on-premises servers']
+      },
+      {
+        id: 'q4_cloud_compute',
+        label: 'Do you use cloud computing platforms?',
+        source: 'NIST SP 800-18 §2.1 — System Description; CMMC CAP Scoping Guidance',
+        multi: true,
+        options: ['Microsoft Azure','Amazon Web Services (AWS)','Google Cloud Platform','Other cloud platform','No cloud computing platforms']
+      },
+      {
+        id: 'q5_devices',
+        label: 'What types of end-user devices does your organization use?',
+        source: 'NIST SP 800-171 Rev 2 AC.1.001 — Authorized Users and Devices',
+        multi: true,
+        options: ['Windows laptops','Mac laptops','Windows desktops','Tablets (company-owned)','Smartphones (company-owned)']
+      },
+      {
+        id: 'q6_network',
+        label: 'Do you manage your own network infrastructure?',
+        source: 'NIST SP 800-171 Rev 2 SC family — System & Communications Protection',
+        multi: false,
+        options: ['Yes — firewalls, switches, routers','Yes — basic router/firewall only','No — managed by ISP or MSP','No network infrastructure']
+      }
+    ]
+  },
+  {
+    id: 'cui_flow',
+    icon: '🔄',
+    title: 'Section 2 — CUI Flow',
+    questions: [
+      {
+        id: 'q7_receive_cui',
+        label: 'How do you receive CUI from the government?',
+        source: '32 CFR Part 2002 — CUI Regulation; DoD CUI Registry',
+        multi: true,
+        options: ['Email (unencrypted)','Email (encrypted / S/MIME)','Secure portal or SFTP','Physical media (USB, CD)','In person / verbal','We do not receive CUI directly']
+      },
+      {
+        id: 'q8_store_cui',
+        label: 'How do you store CUI?',
+        source: '32 CFR Part 2002; NIST SP 800-171 MP family — Media Protection',
+        multi: true,
+        options: ['Cloud storage (FedRAMP authorized)','Cloud storage (not FedRAMP authorized)','On-premises servers','Local hard drives / workstations','Removable media (USB, external drives)','Printed / paper documents']
+      },
+      {
+        id: 'q9_share_cui',
+        label: 'How do you share CUI internally?',
+        source: '32 CFR Part 2002; NIST SP 800-171 AC family — Access Control',
+        multi: true,
+        options: ['Email','Shared network drive','Microsoft Teams / SharePoint','Slack or similar tools','In person only']
+      },
+      {
+        id: 'q10_removable',
+        label: 'Is CUI ever stored on removable media (USB drives, CDs, external hard drives)?',
+        source: 'NIST SP 800-171 Rev 2 MP.1.118, MP.2.120 — Media Protection',
+        multi: false,
+        options: ['Yes — regularly','Yes — occasionally','No — we prohibit removable media','No — never occurs in practice']
+      },
+      {
+        id: 'q11_auto_process',
+        label: 'Do any systems automatically process or generate CUI (e.g. ERP, database, engineering tool)?',
+        source: 'NIST SP 800-37 §2.1 — System Boundary; CMMC CAP Scoping Guidance',
+        multi: false,
+        options: ['Yes','No','Unsure']
+      }
+    ]
+  },
+  {
+    id: 'workforce',
+    icon: '👥',
+    title: 'Section 3 — Workforce',
+    questions: [
+      {
+        id: 'q12_headcount',
+        label: 'How many employees have access to CUI?',
+        source: 'NIST SP 800-171 Rev 2 AC.1.001 — Limit system access to authorized users',
+        multi: false,
+        options: ['1 – 5','6 – 15','16 – 50','51 – 100','More than 100']
+      },
+      {
+        id: 'q13_remote',
+        label: 'Do employees work remotely?',
+        source: 'NIST SP 800-171 Rev 2 AC.2.006 — Remote Access; SC.3.177 — Encrypted Transmission',
+        multi: false,
+        options: ['Yes — fully remote','Yes — some employees are remote','No — all employees work on-site']
+      },
+      {
+        id: 'q14_byod',
+        label: 'Do employees use personal devices for work (BYOD)?',
+        source: 'NIST SP 800-171 Rev 2 AC.1.001; CMMC CAP Scoping Guidance — BYOD',
+        multi: false,
+        options: ['Yes — personal devices access CUI','Yes — personal devices used but not for CUI','No — company devices only']
+      },
+      {
+        id: 'q15_it',
+        label: 'Do you have a dedicated IT person or team?',
+        source: 'NIST SP 800-171 Rev 2 AT family — Awareness & Training; CA family — Assessment',
+        multi: false,
+        options: ['Yes — internal IT staff','Yes — outsourced Managed Service Provider (MSP)','No dedicated IT support']
+      }
+    ]
+  },
+  {
+    id: 'external',
+    icon: '🔌',
+    title: 'Section 4 — External Connections',
+    questions: [
+      {
+        id: 'q16_vpn',
+        label: 'Do you use a VPN for remote access?',
+        source: 'NIST SP 800-171 Rev 2 SC.3.177 — Encrypted Remote Sessions; AC.2.006 — Remote Access',
+        multi: false,
+        options: ['Yes — all remote users required to use VPN','Yes — VPN available but not required','No VPN in use','No remote access at all']
+      },
+      {
+        id: 'q17_third_party_it',
+        label: 'Does third-party IT support have access to your systems?',
+        source: 'NIST SP 800-171 Rev 2 AC.1.001; CA.2.157 — Third-Party Assessment',
+        multi: false,
+        options: ['Yes — ongoing remote access','Yes — on-site access only','Yes — both remote and on-site','No third-party IT access']
+      },
+      {
+        id: 'q18_subcontractors',
+        label: 'Do subcontractors or teaming partners receive CUI from you?',
+        source: 'DFARS 252.204-7012 §(c) — Flow-Down Requirements to Subcontractors',
+        multi: false,
+        options: ['Yes — they receive CUI regularly','Yes — occasionally','No — CUI stays within our organization']
+      },
+      {
+        id: 'q19_gov_portals',
+        label: 'Do you connect to government networks or portals to handle CUI?',
+        source: 'NIST SP 800-171 Rev 2 SC.3.181 — Network Segmentation; CMMC CAP Scoping Guidance',
+        multi: true,
+        options: ['PIEE (Procurement Integrated Enterprise Environment)','SAFE (Secure Access File Exchange)','DISA portals','Other government portal','No government network connections']
+      },
+      {
+        id: 'q20_mfa',
+        label: 'Do you currently use multi-factor authentication (MFA)?',
+        source: 'NIST SP 800-171 Rev 2 IA.3.083 — Multi-Factor Authentication for privileged and non-privileged accounts',
+        multi: false,
+        options: ['Yes — MFA enabled everywhere','Yes — MFA on some systems only','No — not yet implemented']
+      }
+    ]
+  },
+  {
+    id: 'cui_type',
+    icon: '🏷️',
+    title: 'Section 5 — CUI Type',
+    questions: [
+      {
+        id: 'q21_cui_types',
+        label: 'What type(s) of CUI does your organization handle?',
+        source: 'DoD CUI Registry (archives.gov/cui); 32 CFR Part 2002 — CUI Categories',
+        multi: true,
+        options: ['Technical Data / Engineering drawings','Export Controlled (ITAR/EAR)','Privacy / Personally Identifiable Information (PII)','Law Enforcement Sensitive','Financial / Procurement','General CUI (other)']
+      },
+      {
+        id: 'q22_dfars',
+        label: 'Do your contracts include DFARS clause 252.204-7012?',
+        source: 'DFARS 252.204-7012 — Safeguarding Covered Defense Information; this is the clause that triggers CMMC requirements',
+        multi: false,
+        options: ['Yes','No','Unsure — I need to check my contracts']
+      },
+      {
+        id: 'q23_export',
+        label: 'Is any of your CUI marked export controlled (CUI//SP-ITAR or CUI//CTI)?',
+        source: '22 CFR 120–130 (ITAR); 15 CFR 730–774 (EAR); NIST SP 800-171B — Enhanced Security Requirements',
+        multi: false,
+        options: ['Yes','No','Unsure']
+      }
+    ]
+  }
+];
+
+const SCOPE_STORAGE_KEY = 'cmmc_scope_answers';
+
+function loadScopeAnswers() {
+  try { return JSON.parse(localStorage.getItem(SCOPE_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function saveScopeAnswer(qid, val) {
+  const ans = loadScopeAnswers();
+  ans[qid] = val;
+  localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(ans));
+  updateScopeProgress();
+  autoPopulateSspFromScope();
+}
+
+function toggleScopeOpt(qid, val, multi, el) {
+  const ans = loadScopeAnswers();
+  if (multi) {
+    let arr = Array.isArray(ans[qid]) ? ans[qid] : [];
+    const idx = arr.indexOf(val);
+    if (idx>=0) arr.splice(idx,1); else arr.push(val);
+    ans[qid] = arr;
+    el.classList.toggle('selected', arr.includes(val));
+  } else {
+    ans[qid] = val;
+    el.closest('.scope-q-options').querySelectorAll('.scope-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(ans));
+  updateScopeProgress();
+  autoPopulateSspFromScope();
+}
+
+function getScopeCompletionCount() {
+  const ans = loadScopeAnswers();
+  let total = 0, done = 0;
+  SCOPE_SECTIONS.forEach(s => s.questions.forEach(q => {
+    total++;
+    const a = ans[q.id];
+    if (a && (Array.isArray(a) ? a.length>0 : true)) done++;
+  }));
+  return {done, total};
+}
+
+function isScopeDone() {
+  const {done, total} = getScopeCompletionCount();
+  return done === total;
+}
+
+function updateScopeProgress() {
+  const {done, total} = getScopeCompletionCount();
+  // Update section progress chips
+  SCOPE_SECTIONS.forEach(sec => {
+    const el = document.getElementById('scope-prog-'+sec.id);
+    if (!el) return;
+    const qs = sec.questions;
+    const ans = loadScopeAnswers();
+    const secDone = qs.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
+    el.textContent = secDone + ' / ' + qs.length;
+  });
+  // Banner
+  const banner = document.getElementById('scopeCompleteBanner');
+  if (banner) banner.classList.toggle('hidden', !isScopeDone());
+  // Warning on wizard tab
+  const warn = document.getElementById('scopeWarnBanner');
+  if (warn) warn.classList.toggle('hidden', isScopeDone());
+}
+
+function autoPopulateSspFromScope() {
+  const ans = loadScopeAnswers();
+  const org = getTplOrg ? getTplOrg() : {};
+
+  // Build system boundary narrative
+  const parts = [];
+  if (ans.q1_email) parts.push('Email: ' + ans.q1_email + '.');
+  if (ans.q2_storage && ans.q2_storage.length) parts.push('File storage: ' + ans.q2_storage.join(', ') + '.');
+  if (ans.q3_servers) parts.push('On-premises servers: ' + ans.q3_servers + '.');
+  if (ans.q4_cloud_compute && ans.q4_cloud_compute.length && !ans.q4_cloud_compute.includes('No cloud computing platforms'))
+    parts.push('Cloud platforms: ' + ans.q4_cloud_compute.filter(x=>!x.startsWith('No')).join(', ') + '.');
+  if (ans.q5_devices && ans.q5_devices.length) parts.push('End-user devices: ' + ans.q5_devices.join(', ') + '.');
+  if (ans.q6_network) parts.push('Network infrastructure: ' + ans.q6_network + '.');
+  if (ans.q19_gov_portals && ans.q19_gov_portals.length && !ans.q19_gov_portals.includes('No government network connections'))
+    parts.push('Government connections: ' + ans.q19_gov_portals.filter(x=>!x.startsWith('No')).join(', ') + '.');
+
+  const scopeNarrative = parts.length
+    ? 'System boundary as defined during scoping assessment:\n\n' + parts.join('\n')
+    : '';
+
+  // Build environment narrative
+  const envParts = [];
+  if (ans.q13_remote) envParts.push('Remote work: ' + ans.q13_remote + '.');
+  if (ans.q14_byod) envParts.push('BYOD policy: ' + ans.q14_byod + '.');
+  if (ans.q15_it) envParts.push('IT support: ' + ans.q15_it + '.');
+  if (ans.q16_vpn) envParts.push('VPN: ' + ans.q16_vpn + '.');
+  if (ans.q17_third_party_it) envParts.push('Third-party IT access: ' + ans.q17_third_party_it + '.');
+  if (ans.q20_mfa) envParts.push('MFA status: ' + ans.q20_mfa + '.');
+
+  const envNarrative = envParts.length
+    ? 'Operating environment as defined during scoping assessment:\n\n' + envParts.join('\n')
+    : '';
+
+  // Build CUI type description
+  const cuiParts = [];
+  if (ans.q21_cui_types && ans.q21_cui_types.length) cuiParts.push('CUI types handled: ' + ans.q21_cui_types.join(', ') + '.');
+  if (ans.q7_receive_cui && ans.q7_receive_cui.length) cuiParts.push('CUI received via: ' + ans.q7_receive_cui.join(', ') + '.');
+  if (ans.q8_store_cui && ans.q8_store_cui.length) cuiParts.push('CUI stored in: ' + ans.q8_store_cui.join(', ') + '.');
+  if (ans.q18_subcontractors) cuiParts.push('CUI shared with subcontractors: ' + ans.q18_subcontractors + '.');
+  if (ans.q22_dfars) cuiParts.push('DFARS 252.204-7012 clause: ' + ans.q22_dfars + '.');
+  if (ans.q23_export) cuiParts.push('Export controlled CUI (ITAR/EAR): ' + ans.q23_export + '.');
+
+  const descNarrative = cuiParts.length
+    ? 'CUI profile as defined during scoping assessment:\n\n' + cuiParts.join('\n')
+    : '';
+
+  // Only populate SSP fields if they are currently empty (don't overwrite user edits)
+  const tplData = getTplOrg ? getTplOrg() : {};
+  if (!tplData.sysScope && scopeNarrative) saveTplOrg('sysScope', scopeNarrative);
+  if (!tplData.sysEnv   && envNarrative)   saveTplOrg('sysEnv',   envNarrative);
+  if (!tplData.sysDesc  && descNarrative)  saveTplOrg('sysDesc',  descNarrative);
+}
+
+function buildScopeView() {
+  const container = document.getElementById('scopeView');
+  const ans = loadScopeAnswers();
+  const {done, total} = getScopeCompletionCount();
+  const allDone = done === total;
+
+  let html = `<div class="scope-wrap">
+    <div class="scope-header">
+      <h2>🗺️ System Scope Questionnaire</h2>
+      <p>Define your CUI system boundary before completing the Gap Wizard. Answers auto-populate your SSP and help identify which controls apply to your environment.</p>
+    </div>
+    <div class="scope-complete-banner ${allDone?'':'hidden'}" id="scopeCompleteBanner">
+      ✅ Scoping complete (${total}/${total} questions answered). Your SSP System Boundary, Environment, and CUI Description fields have been pre-populated.
+      <button class="scope-btn secondary" style="margin-left:auto;padding:6px 14px;font-size:12px" onclick="setMode('templates')">View SSP →</button>
+    </div>`;
+
+  SCOPE_SECTIONS.forEach(sec => {
+    const secAns = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
+    html += `<div class="scope-section">
+      <div class="scope-section-header">
+        <span class="scope-section-icon">${sec.icon}</span>
+        <h3>${sec.title}</h3>
+        <span class="scope-section-progress" id="scope-prog-${sec.id}">${secAns} / ${sec.questions.length}</span>
+      </div>`;
+
+    sec.questions.forEach(q => {
+      const saved = ans[q.id] || (q.multi ? [] : null);
+      html += `<div class="scope-q">
+        <div class="scope-q-label">${q.label}</div>
+        <div class="scope-q-source">📖 ${q.source}</div>
+        <div class="scope-q-options">`;
+      q.options.forEach(opt => {
+        const sel = q.multi
+          ? (Array.isArray(saved) && saved.includes(opt))
+          : saved === opt;
+        html += `<span class="scope-opt${q.multi?' multi':''}${sel?' selected':''}"
+          onclick="toggleScopeOpt('${q.id}','${escHtml(opt)}',${q.multi},this)">${escHtml(opt)}</span>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `<div class="scope-actions">
+    <button class="scope-btn secondary" onclick="if(confirm('Clear all scope answers?')){localStorage.removeItem('${SCOPE_STORAGE_KEY}');buildScopeView();}">Reset Answers</button>
+    <button class="scope-btn primary" onclick="setMode('wizard')">Continue to Gap Wizard →</button>
+  </div></div>`;
+
+  container.innerHTML = html;
+}
+
 function buildWizardView() {
   initWizard();
   const container = document.getElementById('wizardView');
@@ -3169,7 +3582,12 @@ function buildWizardIntro() {
     </div></div>`;
   }
 
+  const scopeDone = isScopeDone();
   return `<div class="wiz-wrap">
+    <div class="scope-warning ${scopeDone?'hidden':''}" id="scopeWarnBanner">
+      ⚠️ <strong>System scope not completed.</strong> Some controls may not reflect your actual environment.
+      <button class="scope-btn secondary" style="margin-left:auto;padding:5px 12px;font-size:12px" onclick="setMode('scope')">Complete Scoping →</button>
+    </div>
     <div class="wiz-intro">
       <div class="wiz-intro-header">
         <h2>🧭 Gap Wizard</h2>
