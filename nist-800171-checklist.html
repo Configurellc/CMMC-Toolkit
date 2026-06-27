@@ -392,6 +392,18 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .scope-btn.secondary:hover { background:#e2e8f0; }
 .scope-complete-banner { background:#dcfce7; border:1px solid #86efac; border-radius:10px; padding:14px 20px; font-size:13px; color:#166534; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
 .scope-complete-banner.hidden { display:none; }
+.scope-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.06); border:1.5px solid #e2e8f0; margin-bottom:10px; overflow:hidden; transition:border-color .2s, box-shadow .2s; }
+.scope-card.active { border-color:#6366f1; box-shadow:0 2px 14px rgba(79,70,229,.13); }
+.scope-card.dimmed { opacity:.7; }
+.scope-card-head { padding:14px 18px; display:flex; align-items:center; gap:12px; cursor:pointer; }
+.scope-card-head:hover { background:#fafbff; }
+.scope-card-title { font-size:13px; font-weight:700; color:#1e293b; }
+.scope-card-desc { font-size:11px; color:#64748b; margin-top:2px; }
+.scope-card-badge { font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; margin-right:6px; }
+.scope-card-chevron { font-size:12px; color:#94a3b8; flex-shrink:0; }
+.scope-card-chevron.open { color:#6366f1; font-weight:700; }
+.scope-card-body { border-top:1px solid #e0e7ff; padding:16px 18px; background:#fafafa; }
+.scope-card-footer { display:flex; justify-content:flex-end; margin-top:12px; }
 
 /* ── Gap Wizard ───────────────────────────────────────────── */
 .wiz-wrap { max-width:760px; margin:0 auto; padding:24px 0 40px; }
@@ -3195,14 +3207,33 @@ const SCOPE_SECTIONS = [
         label: 'Do you use cloud-based email?',
         source: 'NIST SP 800-18 §2.1 — System Description; NIST SP 800-37 §2.1 — System Boundary',
         multi: false,
-        options: ['Microsoft 365 / Exchange Online','Google Workspace','Other cloud email','On-premises email only','No email system']
+        options: [
+          'Microsoft 365 GCC High (Government Community Cloud High)',
+          'Microsoft 365 GCC (Government Community Cloud)',
+          'Microsoft 365 Commercial (standard business subscription)',
+          'Google Workspace for Government (FedRAMP authorized)',
+          'Google Workspace Commercial (standard)',
+          'Other cloud email',
+          'On-premises email only',
+          'No email system'
+        ]
       },
       {
         id: 'q2_storage',
         label: 'Do you use cloud file storage?',
         source: 'NIST SP 800-18 §2.1 — System Description; CMMC CAP Scoping Guidance',
         multi: true,
-        options: ['SharePoint / OneDrive','Google Drive','Dropbox / Box','AWS S3 or similar','Other cloud storage','No cloud file storage']
+        options: [
+          'SharePoint / OneDrive (part of M365 GCC High)',
+          'SharePoint / OneDrive (part of M365 GCC)',
+          'SharePoint / OneDrive (Commercial)',
+          'Google Drive for Government (FedRAMP authorized)',
+          'Google Drive Commercial',
+          'Dropbox / Box',
+          'AWS S3 or similar',
+          'Other cloud storage',
+          'No cloud file storage'
+        ]
       },
       {
         id: 'q3_servers',
@@ -3389,6 +3420,51 @@ function loadScopeAnswers() {
   try { return JSON.parse(localStorage.getItem(SCOPE_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
 }
 
+// ── Platform detection helpers ──────────────────────────────
+function getM365Tier() {
+  const ans = loadScopeAnswers();
+  const email   = ans.q1_email || '';
+  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
+  if (email.includes('GCC High') || storage.some(s => s.includes('GCC High'))) return 'gcchigh';
+  if (email.includes('GCC (Government') || storage.some(s => s.includes('GCC)')))  return 'gcc';
+  if (email.includes('Commercial') || storage.some(s => s.includes('Commercial'))) return 'commercial';
+  return null; // not using M365
+}
+
+function hasM365() { return getM365Tier() !== null; }
+function isM365Commercial() { return getM365Tier() === 'commercial'; }
+
+function getGoogleTier() {
+  const ans = loadScopeAnswers();
+  const email   = ans.q1_email || '';
+  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
+  if (email.includes('Google Workspace for Government') || storage.some(s => s.includes('Google Drive for Government'))) return 'gov';
+  if (email.includes('Google Workspace Commercial') || storage.some(s => s.includes('Google Drive Commercial'))) return 'commercial';
+  return null;
+}
+
+function hasNonCompliantCloud() {
+  const ans = loadScopeAnswers();
+  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
+  const nonCompliant = [];
+  if (isM365Commercial()) nonCompliant.push('Microsoft 365 Commercial');
+  if (getGoogleTier() === 'commercial') nonCompliant.push('Google Workspace Commercial');
+  if (storage.some(s => s.includes('Dropbox') || s.includes('Box'))) nonCompliant.push('Dropbox/Box');
+  return nonCompliant;
+}
+
+function getPlatformProfile() {
+  return {
+    m365Tier:       getM365Tier(),
+    hasM365:        hasM365(),
+    isM365Commercial: isM365Commercial(),
+    googleTier:     getGoogleTier(),
+    nonCompliantCloud: hasNonCompliantCloud(),
+    hasAWS:         (loadScopeAnswers().q4_cloud_compute || []).some(x => x.includes('AWS')),
+    hasAzure:       (loadScopeAnswers().q4_cloud_compute || []).some(x => x.includes('Azure')),
+  };
+}
+
 function saveScopeAnswer(qid, val) {
   const ans = loadScopeAnswers();
   ans[qid] = val;
@@ -3503,53 +3579,166 @@ function autoPopulateSspFromScope() {
   if (!tplData.sysDesc  && descNarrative)  saveTplOrg('sysDesc',  descNarrative);
 }
 
-function buildScopeView() {
+function getSectionStatus(sec, ans) {
+  const total = sec.questions.length;
+  const done  = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
+  if (done === total) return 'complete';
+  if (done > 0)       return 'partial';
+  return 'empty';
+}
+
+function buildScopeCriticalFindings() {
+  const nonCompliant = hasNonCompliantCloud();
+  const tier = getM365Tier();
+  if (!nonCompliant.length && !tier) return '';
+
+  let findings = [];
+
+  if (isM365Commercial()) {
+    findings.push({
+      level: 'critical',
+      title: 'Microsoft 365 Commercial cannot store CUI',
+      body: 'Your organization is using a commercial Microsoft 365 subscription. CUI must be stored and processed in <strong>Microsoft 365 GCC or GCC High</strong> — standard commercial tenants are not authorized regardless of configuration. This is a foundational gap that affects AC, AU, IA, SC, and SI control families. Migration to GCC or GCC High is required before most other remediation steps will satisfy a C3PAO assessment.',
+      link: 'https://learn.microsoft.com/en-us/office365/servicedescriptions/office-365-platform-service-description/microsoft-365-government/gcc-high-and-dod'
+    });
+  }
+
+  if (getGoogleTier() === 'commercial') {
+    findings.push({
+      level: 'critical',
+      title: 'Google Workspace Commercial cannot store CUI',
+      body: 'Standard Google Workspace is not FedRAMP authorized for CUI. You must use <strong>Google Workspace for Government</strong> (FedRAMP Moderate) to store or process CUI. This affects multiple control families across AC, AU, SC, and SI domains.',
+      link: 'https://workspace.google.com/intl/en/products/gmail/government/'
+    });
+  }
+
+  const ans = loadScopeAnswers();
+  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
+  if (storage.some(s => s.includes('Dropbox') || s.includes('Box'))) {
+    findings.push({
+      level: 'critical',
+      title: 'Dropbox / Box cannot store CUI',
+      body: 'Dropbox and Box standard tiers are not FedRAMP authorized for CUI storage. CUI stored in these systems must be migrated to a FedRAMP-authorized alternative (SharePoint/OneDrive GCC, Google Drive for Government, or AWS GovCloud S3). This affects MP, SC, and AC controls.',
+      link: null
+    });
+  }
+
+  if (tier === 'gcc' && (ans.q23_export === 'Yes')) {
+    findings.push({
+      level: 'warning',
+      title: 'M365 GCC High required for ITAR/EAR export-controlled CUI',
+      body: 'Your scoping indicates you handle export-controlled CUI (ITAR/EAR). Microsoft 365 GCC is only FedRAMP Moderate — export-controlled CUI requires <strong>GCC High</strong>, which meets FedRAMP High and DoD IL4/IL5 requirements.',
+      link: 'https://learn.microsoft.com/en-us/office365/servicedescriptions/office-365-platform-service-description/microsoft-365-government/gcc-high-and-dod'
+    });
+  }
+
+  if (!findings.length) return '';
+
+  const bgColor  = f => f.level==='critical' ? '#fef2f2' : '#fffbeb';
+  const bdrColor = f => f.level==='critical' ? '#fca5a5' : '#fcd34d';
+  const txtColor = f => f.level==='critical' ? '#991b1b' : '#92400e';
+  const icon     = f => f.level==='critical' ? '🚨' : '⚠️';
+
+  return findings.map(f => `
+    <div style="background:${bgColor(f)};border:1.5px solid ${bdrColor(f)};border-radius:12px;padding:16px 18px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;color:${txtColor(f)};margin-bottom:6px">${icon(f)} Critical Finding: ${f.title}</div>
+      <div style="font-size:12px;color:${txtColor(f)};line-height:1.6">${f.body}</div>
+      ${f.link ? `<a href="${f.link}" target="_blank" style="font-size:11px;color:${txtColor(f)};margin-top:8px;display:inline-block;text-decoration:underline">Learn more →</a>` : ''}
+    </div>`).join('');
+}
+
+const SECTION_DESCS = {
+  inventory: 'Cloud services, devices, servers, network',
+  cui_flow:  'How CUI is received, stored, and shared',
+  workforce: 'Headcount, remote workers, BYOD, IT support',
+  external:  'VPN, third-party IT, subcontractors, gov portals',
+  cui_type:  'CUI categories, DFARS clause, export controls'
+};
+
+function buildScopeView(activeSectionId) {
   const container = document.getElementById('scopeView');
   const ans = loadScopeAnswers();
   const {done, total} = getScopeCompletionCount();
   const allDone = done === total;
+  const pct = Math.round(done / total * 100);
+
+  // Auto-open first incomplete section if none specified
+  if (!activeSectionId) {
+    const first = SCOPE_SECTIONS.find(s => getSectionStatus(s, ans) !== 'complete');
+    activeSectionId = first ? first.id : null;
+  }
 
   let html = `<div class="scope-wrap">
     <div class="scope-header">
       <h2>🗺️ System Scope Questionnaire</h2>
-      <p>Define your CUI system boundary before completing the Gap Wizard. Answers auto-populate your SSP and help identify which controls apply to your environment.</p>
+      <p>Define your CUI boundary before the Gap Wizard. Answers auto-populate your SSP.</p>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+        <div style="flex:1;height:6px;background:rgba(255,255,255,.2);border-radius:3px">
+          <div style="width:${pct}%;height:100%;background:#a5b4fc;border-radius:3px"></div>
+        </div>
+        <span style="font-size:11px;opacity:.8;white-space:nowrap">${done} / ${total} answered</span>
+      </div>
     </div>
     <div class="scope-complete-banner ${allDone?'':'hidden'}" id="scopeCompleteBanner">
-      ✅ Scoping complete (${total}/${total} questions answered). Your SSP System Boundary, Environment, and CUI Description fields have been pre-populated.
-      <button class="scope-btn secondary" style="margin-left:auto;padding:6px 14px;font-size:12px" onclick="setMode('templates')">View SSP →</button>
-    </div>`;
+      ✅ Scoping complete — your SSP has been pre-populated.
+      <button class="scope-btn secondary" style="margin-left:auto;padding:5px 12px;font-size:12px" onclick="setMode('templates')">View SSP →</button>
+    </div>
+    ${buildScopeCriticalFindings()}`;
 
-  SCOPE_SECTIONS.forEach(sec => {
-    const secAns = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
-    html += `<div class="scope-section">
-      <div class="scope-section-header">
-        <span class="scope-section-icon">${sec.icon}</span>
-        <h3>${sec.title}</h3>
-        <span class="scope-section-progress" id="scope-prog-${sec.id}">${secAns} / ${sec.questions.length}</span>
+  SCOPE_SECTIONS.forEach((sec, i) => {
+    const secDone   = sec.questions.filter(q=>{const a=ans[q.id];return a&&(Array.isArray(a)?a.length>0:true);}).length;
+    const status    = getSectionStatus(sec, ans);
+    const isActive  = sec.id === activeSectionId;
+    const nextSec   = SCOPE_SECTIONS[i + 1];
+
+    const badgeBg    = status==='complete' ? '#dcfce7' : status==='partial' ? '#fef9c3' : '#f1f5f9';
+    const badgeColor = status==='complete' ? '#166534' : status==='partial' ? '#854d0e' : '#94a3b8';
+    const badgeText  = status==='complete' ? `${sec.questions.length}/${sec.questions.length} ✓` : `${secDone}/${sec.questions.length}`;
+    const chevron    = isActive ? '▾' : '›';
+    const dimmed     = !isActive && status === 'empty' ? ' dimmed' : '';
+    const activeClass= isActive ? ' active' : '';
+
+    html += `<div class="scope-card${activeClass}${dimmed}">
+      <div class="scope-card-head" onclick="buildScopeView(${isActive ? 'null' : `'${sec.id}'`})">
+        <div style="flex:1">
+          <div class="scope-card-title">${sec.title.replace(/Section \d+ — /,'')}</div>
+          <div class="scope-card-desc">${SECTION_DESCS[sec.id]}</div>
+        </div>
+        <span class="scope-card-badge" style="background:${badgeBg};color:${badgeColor}">${badgeText}</span>
+        <span class="scope-card-chevron${isActive?' open':''}">${chevron}</span>
       </div>`;
 
-    sec.questions.forEach(q => {
-      const saved = ans[q.id] || (q.multi ? [] : null);
-      html += `<div class="scope-q">
-        <div class="scope-q-label">${q.label}</div>
-        <div class="scope-q-source">📖 ${q.source}</div>
-        <div class="scope-q-options">`;
-      q.options.forEach(opt => {
-        const sel = q.multi
-          ? (Array.isArray(saved) && saved.includes(opt))
-          : saved === opt;
-        html += `<span class="scope-opt${q.multi?' multi':''}${sel?' selected':''}"
-          onclick="toggleScopeOpt('${q.id}','${escHtml(opt)}',${q.multi},this)">${escHtml(opt)}</span>`;
+    if (isActive) {
+      html += `<div class="scope-card-body">`;
+      sec.questions.forEach(q => {
+        const saved = ans[q.id] || (q.multi ? [] : null);
+        html += `<div class="scope-q">
+          <div class="scope-q-label">${q.label}</div>
+          <div class="scope-q-source">📖 ${q.source}</div>
+          <div class="scope-q-options">`;
+        q.options.forEach(opt => {
+          const sel = q.multi ? (Array.isArray(saved)&&saved.includes(opt)) : saved===opt;
+          html += `<span class="scope-opt${q.multi?' multi':''}${sel?' selected':''}"
+            onclick="toggleScopeOpt('${q.id}','${escHtml(opt)}',${q.multi},this)">${escHtml(opt)}</span>`;
+        });
+        html += `</div></div>`;
       });
-      html += `</div></div>`;
-    });
+      html += `<div class="scope-card-footer">
+        ${nextSec
+          ? `<button class="scope-btn primary" onclick="buildScopeView('${nextSec.id}')">Next: ${nextSec.title.replace(/Section \d+ — /,'')} →</button>`
+          : `<button class="scope-btn primary" onclick="buildScopeView(null)">✓ Finish Scoping</button>`}
+      </div>
+      </div>`;
+    }
+
     html += `</div>`;
   });
 
   html += `<div class="scope-actions">
-    <button class="scope-btn secondary" onclick="if(confirm('Clear all scope answers?')){localStorage.removeItem('${SCOPE_STORAGE_KEY}');buildScopeView();}">Reset Answers</button>
+    <button class="scope-btn secondary" onclick="if(confirm('Clear all scope answers?')){localStorage.removeItem('${SCOPE_STORAGE_KEY}');buildScopeView();}">Reset All</button>
     <button class="scope-btn primary" onclick="setMode('wizard')">Continue to Gap Wizard →</button>
-  </div></div>`;
+  </div>
+  </div>`;
 
   container.innerHTML = html;
 }
