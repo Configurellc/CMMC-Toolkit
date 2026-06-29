@@ -164,6 +164,16 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .obj-select.o-not-met{ background:#fee2e2; border-color:#fca5a5; color:#991b1b; }
 .obj-select.o-not-applicable{ background:#e2e8f0; border-color:#cbd5e1; color:#475569; }
 
+/* ── Inline AO rows in Org tab ── */
+.ctrl-ao-list { grid-column:1/-1; border-top:1px solid #e0e7ff; background:#f8f9ff; }
+.ao-toggle { font-size:11px; color:#6366f1; cursor:pointer; padding:2px 0; user-select:none; margin-left:12px; }
+.ao-toggle:hover { color:#4338ca; text-decoration:underline; }
+.ao-toggle.ao-complete { color:#16a34a; }
+.ao-fail-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; border-radius:10px; padding:1px 8px; margin-left:8px; }
+.control-row.ao-failing { background:#fff5f5 !important; }
+.control-row.ao-failing:hover { background:#fef2f2 !important; }
+.control-row.ao-failing .ctrl-id { color:#dc2626; }
+
 /* ── SPRS Calculator ── */
 .sprs-header-card{ background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%); border-radius:12px; padding:20px 24px; margin-bottom:16px; color:#fff; }
 .sprs-top-row{ display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap; }
@@ -1252,6 +1262,10 @@ async function setAuditObj(id, val) {
   auditStatus[id] = val;
   refreshObjRow(id);
   updateAuditCtrlHeader(id.replace(/\[[a-z]\]$/,''));
+  updateOrgAOToggle(id.replace(/\[[a-z]\]$/,''));
+  syncOrgFromAOs(id.replace(/\[[a-z]\]$/,''));
+  refreshOrgRow(id.replace(/\[[a-z]\]$/,'')); // keeps fail badge in sync even if status didn't change
+  updateWizardAOBanner(id.replace(/\[[a-z]\]$/,''));
   updateAllProgress();
   if (!configured||!db) return;
   const row = document.getElementById('obj-row-'+id);
@@ -1454,20 +1468,69 @@ function refreshOrgRow(id) {
   const row = document.getElementById('org-row-'+id);
   if (!row) return;
   const s = getOrg(id);
-  row.className='control-row'+(s==='complete'?' status-complete':s==='in-progress'?' status-in-progress':'');
+  const notMetAOs = (OBJECTIVES[id]||[]).filter(([l]) => getAudit(id+'['+l+']') === 'not-met');
+  const isFailing = notMetAOs.length > 0;
+  row.className = 'control-row'
+    + (s==='complete'?' status-complete':s==='in-progress'?' status-in-progress':'')
+    + (isFailing?' ao-failing':'');
   const sel = row.querySelector('.status-select');
   if (sel){ sel.value=s; sel.className='status-select'+(s==='complete'?' s-complete':s==='in-progress'?' s-in-progress':''); }
   const chk = row.querySelector('.ctrl-check');
   if (chk) chk.checked = s==='complete';
+  // Fail badge
+  const badge = document.getElementById('ao-fail-'+id);
+  if (badge) {
+    badge.style.display = isFailing ? '' : 'none';
+    badge.textContent = `⚠️ ${notMetAOs.length} AO${notMetAOs.length!==1?'s':''} not met — 0 SPRS pts`;
+  }
 }
 
 function refreshObjRow(id) {
-  const row = document.getElementById('obj-row-'+id);
-  if (!row) return;
-  const s = getAudit(id);
-  row.className='obj-row'+(s==='met'?' o-met':s==='not-met'?' o-not-met':s==='not-applicable'?' o-not-applicable':'');
-  const sel = row.querySelector('.obj-select');
-  if (sel){ sel.value=s; sel.className='obj-select'+(s==='met'?' o-met':s==='not-met'?' o-not-met':s==='not-applicable'?' o-not-applicable':''); }
+  const s   = getAudit(id);
+  const cls = 'obj-row'+(s==='met'?' o-met':s==='not-met'?' o-not-met':s==='not-applicable'?' o-not-applicable':'');
+  const sCls= 'obj-select'+(s==='met'?' o-met':s==='not-met'?' o-not-met':s==='not-applicable'?' o-not-applicable':'');
+  // Update auditor-tab row (by id) + any other rows sharing data-obj-id (Org tab, Gap Wizard)
+  [document.getElementById('obj-row-'+id), ...document.querySelectorAll('[data-obj-id="'+id+'"]')].filter(Boolean).forEach(row => {
+    row.className = cls;
+    const sel = row.querySelector('.obj-select');
+    if (sel){ sel.value=s; sel.className=sCls; }
+  });
+}
+
+// Auto-derive org control status from its AO statuses
+function syncOrgFromAOs(ctrlId) {
+  const objs = OBJECTIVES[ctrlId] || [];
+  if (!objs.length) return;
+  const statuses = objs.map(([l]) => getAudit(ctrlId+'['+l+']'));
+  const anyAssessed = statuses.some(s => s !== 'not-reviewed');
+  if (!anyAssessed) return; // nothing reviewed yet — don't override manual status
+  const allDone = statuses.every(s => s === 'met' || s === 'not-applicable');
+  const anyMet  = statuses.some(s => s === 'met');
+  const derived = (allDone && anyMet) ? 'complete' : 'in-progress';
+  if (getOrg(ctrlId) !== derived) setOrg(ctrlId, derived);
+}
+
+// Refresh the AO toggle button text and color in the Org tab
+function updateOrgAOToggle(ctrlId) {
+  const objs = OBJECTIVES[ctrlId] || [];
+  const btn  = document.getElementById('ao-btn-'+ctrlId);
+  if (!btn || !objs.length) return;
+  const metCount  = objs.filter(([l]) => getAudit(ctrlId+'['+l+']') === 'met').length;
+  const naCount   = objs.filter(([l]) => getAudit(ctrlId+'['+l+']') === 'not-applicable').length;
+  const doneCount = metCount + naCount;
+  const open = document.getElementById('org-ao-'+ctrlId)?.style.display !== 'none';
+  btn.textContent = (open ? '▾' : '▸') + ` AOs (${doneCount}/${objs.length} met/N/A)`;
+  btn.classList.toggle('ao-complete', doneCount === objs.length && objs.length > 0);
+}
+
+// Toggle inline AO list in Org tab
+function toggleOrgAO(ctrlId) {
+  const list = document.getElementById('org-ao-'+ctrlId);
+  const btn  = document.getElementById('ao-btn-'+ctrlId);
+  if (!list) return;
+  const isOpen = list.style.display !== 'none';
+  list.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.textContent = (isOpen ? '▸' : '▾') + btn.textContent.slice(1);
 }
 
 function updateAuditCtrlHeader(ctrlId) {
@@ -1516,6 +1579,26 @@ function buildOrgView() {
     const body = sec.querySelector('.domain-body');
     dc.forEach(c => {
       const s = getOrg(c.id);
+      const objs = OBJECTIVES[c.id] || [];
+      const metCount = objs.filter(([l]) => getAudit(c.id+'['+l+']') === 'met').length;
+      const naCount  = objs.filter(([l]) => getAudit(c.id+'['+l+']') === 'not-applicable').length;
+      const doneCount = metCount + naCount;
+      const aoToggleHTML = objs.length ? `<span class="ao-toggle${doneCount===objs.length&&objs.length>0?' ao-complete':''}" id="ao-btn-${c.id}" onclick="toggleOrgAO('${c.id}')">▸ AOs (${doneCount}/${objs.length} met/N/A)</span>` : '';
+      const aoRowsHTML = objs.map(([ltr, txt]) => {
+        const objId = c.id+'['+ltr+']';
+        const os = getAudit(objId);
+        return `<div class="obj-row${os==='met'?' o-met':os==='not-met'?' o-not-met':os==='not-applicable'?' o-not-applicable':''}" data-obj-id="${objId}">
+          <div class="obj-id">[${ltr}]</div>
+          <div class="obj-text">${txt}</div>
+          <select class="obj-select${os==='met'?' o-met':os==='not-met'?' o-not-met':os==='not-applicable'?' o-not-applicable':''}" onchange="setAuditObj('${objId}',this.value)">
+            <option value="not-reviewed"${os==='not-reviewed'?' selected':''}>Not Reviewed</option>
+            <option value="met"${os==='met'?' selected':''}>Met ✓</option>
+            <option value="not-met"${os==='not-met'?' selected':''}>Not Met ✗</option>
+            <option value="not-applicable"${os==='not-applicable'?' selected':''}>N/A</option>
+          </select>
+        </div>`;
+      }).join('');
+
       const row = document.createElement('div');
       row.id='org-row-'+c.id;
       row.className='control-row'+(s==='complete'?' status-complete':s==='in-progress'?' status-in-progress':'');
@@ -1524,7 +1607,11 @@ function buildOrgView() {
         <div class="ctrl-id">${c.id}</div>
         <div class="ctrl-body">
           <div class="ctrl-summary">${c.summary}</div>
-          <span class="ev-toggle" id="ev-btn-${c.id}" onclick="toggleEvidence('${c.id}')">▸ Show evidence needed</span>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+            <span class="ev-toggle" id="ev-btn-${c.id}" onclick="toggleEvidence('${c.id}')">▸ Show evidence needed</span>
+            ${aoToggleHTML}
+            <span class="ao-fail-badge" id="ao-fail-${c.id}" style="display:none"></span>
+          </div>
           <div class="ctrl-evidence" id="ev-${c.id}"><div class="ev-label">Evidence for C3PAO</div>${c.evidence}</div>
         </div>
         <select class="status-select${s==='complete'?' s-complete':s==='in-progress'?' s-in-progress':''}" onchange="setOrg('${c.id}',this.value)">
@@ -1532,6 +1619,7 @@ function buildOrgView() {
           <option value="in-progress"${s==='in-progress'?' selected':''}>In Progress</option>
           <option value="complete"${s==='complete'?' selected':''}>Complete ✓</option>
         </select>
+        ${objs.length ? `<div class="ctrl-ao-list" id="org-ao-${c.id}" style="display:none">${aoRowsHTML}</div>` : ''}
       `;
       body.appendChild(row);
     });
@@ -4145,6 +4233,63 @@ function getCommercialFallback() {
   };
 }
 
+// ── Assessment Objectives section in the Gap Wizard card ──
+function wizardAOBannerContent(controlId) {
+  const objs       = OBJECTIVES[controlId] || [];
+  const notMetCount= objs.filter(([l]) => getAudit(controlId+'['+l+']') === 'not-met').length;
+  const metCount   = objs.filter(([l]) => getAudit(controlId+'['+l+']') === 'met').length;
+  const naCount    = objs.filter(([l]) => getAudit(controlId+'['+l+']') === 'not-applicable').length;
+  const doneCount  = metCount + naCount;
+  const allDone    = doneCount === objs.length && objs.length > 0;
+  if (notMetCount > 0) {
+    return { bg:'#fee2e2', border:'#fca5a5', color:'#991b1b',
+      html:`⚠️ <strong>${notMetCount} objective${notMetCount!==1?'s are':' is'} Not Met</strong> — this control scores <strong>0 SPRS points</strong> until every objective passes` };
+  }
+  if (allDone) {
+    return { bg:'#f0fdf4', border:'#bbf7d0', color:'#15803d',
+      html:`✅ All ${objs.length} objectives met or N/A — control qualifies for full SPRS credit` };
+  }
+  return { bg:'#f5f3ff', border:'#ede9fe', color:'#6366f1',
+    html:`🎯 Assessment Objectives &nbsp;<span style="font-weight:400;color:#94a3b8">${doneCount} / ${objs.length} met or N/A</span>` };
+}
+
+function updateWizardAOBanner(controlId) {
+  const el = document.getElementById('wiz-ao-banner-'+controlId);
+  if (!el) return;
+  const { bg, border, color, html } = wizardAOBannerContent(controlId);
+  el.style.background   = bg;
+  el.style.borderBottom = '1px solid '+border;
+  el.style.color        = color;
+  el.innerHTML          = html;
+}
+
+function buildWizardAOSection(controlId) {
+  const objs = OBJECTIVES[controlId] || [];
+  if (!objs.length) return '';
+
+  const { bg, border, color, html } = wizardAOBannerContent(controlId);
+
+  const rowsHtml = objs.map(([ltr, txt]) => {
+    const objId = controlId+'['+ltr+']';
+    const os = getAudit(objId);
+    return `<div class="obj-row${os==='met'?' o-met':os==='not-met'?' o-not-met':os==='not-applicable'?' o-not-applicable':''}" data-obj-id="${objId}">
+      <div class="obj-id">[${ltr}]</div>
+      <div class="obj-text">${txt}</div>
+      <select class="obj-select${os==='met'?' o-met':os==='not-met'?' o-not-met':os==='not-applicable'?' o-not-applicable':''}" onchange="setAuditObj('${objId}',this.value)">
+        <option value="not-reviewed"${os==='not-reviewed'?' selected':''}>Not Reviewed</option>
+        <option value="met"${os==='met'?' selected':''}>Met ✓</option>
+        <option value="not-met"${os==='not-met'?' selected':''}>Not Met ✗</option>
+        <option value="not-applicable"${os==='not-applicable'?' selected':''}>N/A</option>
+      </select>
+    </div>`;
+  }).join('');
+
+  return `<div class="wiz-section" style="padding:0;overflow:hidden">
+    <div id="wiz-ao-banner-${controlId}" style="padding:10px 20px;font-size:12px;font-weight:600;background:${bg};border-bottom:1px solid ${border};color:${color}">${html}</div>
+    ${rowsHtml}
+  </div>`;
+}
+
 // ── Inject M365-specific steps into the Gap Wizard card ──
 function buildM365WizardSection(controlId) {
   const tier = getM365Tier();
@@ -4219,6 +4364,7 @@ function buildWizardCard(idx) {
           <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Evidence required to satisfy this control:</div>
           <div style="font-size:12px;color:#475569;line-height:1.5">${c.evidence}</div>
         </div>
+        ${buildWizardAOSection(c.id)}
         ${buildM365WizardSection(c.id)}
       </div>
 
