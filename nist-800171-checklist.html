@@ -3802,6 +3802,378 @@ function startWizard() {
   if (container) container.innerHTML = buildWizardCard(0);
 }
 
+// ═══════════════════════════════════════════════════════════
+// M365-SPECIFIC REMEDIATION GUIDANCE — Phase 1
+// Keyed by control ID. Each entry has:
+//   gcchigh  → steps for M365 GCC High tenants
+//   gcc      → steps for M365 GCC tenants
+//   commercial → steps for M365 Commercial (always includes migration warning)
+// Sources: NIST SP 800-171 Rev 2, DISA M365 STIGs, DoD CIO Cloud Strategy,
+//          Microsoft FedRAMP SSPs, DFARS 252.204-7012, 32 CFR Part 2002
+// ═══════════════════════════════════════════════════════════
+const M365_REMEDIATION = {
+
+  // ── 3.5.3  Multifactor Authentication ─────────────────────
+  "3.5.3": {
+    gcchigh: { label:"M365 GCC High — Enforce MFA via Conditional Access", steps:[
+      "Open Microsoft Entra admin center (entra.microsoft.com) → Protection → Conditional Access",
+      "Create policy: All users + All cloud apps → Grant: Require multifactor authentication",
+      "Set Authenticator app as the default method (avoid SMS — not compliant with NIST SP 800-63B AAL2)",
+      "Exclude a break-glass admin account from the CA policy; document the exclusion in your SSP",
+      "Run the Entra Sign-in logs report to confirm MFA is firing on every login",
+      "Source: NIST SP 800-171 r2 §3.5.3; DISA M365 GCC High STIG V1R1 IA-2(1)"
+    ]},
+    gcc: { label:"M365 GCC — Enforce MFA via Conditional Access", steps:[
+      "Open Microsoft Entra admin center → Protection → Conditional Access",
+      "Create policy: All users + All cloud apps → Grant: Require multifactor authentication (requires Entra ID P1 — included in M365 G3/G5, add-on for G1)",
+      "If budget prohibits P1, enable Security Defaults (admin.microsoft.com → Settings → Org settings → Security defaults) as a compensating control",
+      "Set Microsoft Authenticator as the preferred method over SMS OTP",
+      "Source: NIST SP 800-171 r2 §3.5.3; FedRAMP M365 GCC SSP Control IA-2(1)"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — Migration Required; MFA Alone Is Insufficient", warning:true, steps:[
+      "CRITICAL: Commercial M365 is not FedRAMP authorized for CUI. Enabling MFA does not bring this control into compliance if CUI is stored on Commercial.",
+      "Priority action: evaluate migration to M365 GCC (FedRAMP Moderate) or GCC High (DoD IL2/IL4/IL5) based on CUI sensitivity and contract requirements",
+      "In the interim, enforce MFA to reduce risk: Entra admin center → Conditional Access → Require MFA for all users",
+      "Open a POAM item documenting the migration plan and target completion date",
+      "Source: DFARS 252.204-7012(b)(2)(ii)(D); 32 CFR Part 2002; DoD CIO Cloud Strategy memo"
+    ]}
+  },
+
+  // ── 3.5.4  Replay-Resistant Authentication ─────────────────
+  "3.5.4": {
+    gcchigh: { label:"M365 GCC High — Disable Legacy Authentication Protocols", steps:[
+      "In Entra admin center → Protection → Conditional Access, create a policy blocking legacy auth: Condition = Client apps (Legacy auth clients) → Block",
+      "Verify no connectors use Basic Auth: M365 admin center → Reports → Email activity → filter for Basic Auth clients",
+      "Disable SMTP AUTH for all users except those with documented business need: Exchange admin center → Settings → Mail flow → SMTP AUTH",
+      "Enable Modern Authentication for Exchange Online (already on by default for GCC High — verify under org settings)",
+      "Source: NIST SP 800-171 r2 §3.5.4; DISA M365 STIG Exchange V1R1 EXCH-EX-000012"
+    ]},
+    gcc: { label:"M365 GCC — Disable Legacy Authentication Protocols", steps:[
+      "Create a Conditional Access policy: Client apps = Legacy auth clients → Block (requires Entra P1)",
+      "As a fallback without P1: use authentication policies in Exchange Online to block Basic Auth per user or org-wide",
+      "Run the Entra Sign-in logs filtered to 'Legacy authentication client' to identify any remaining dependencies",
+      "Coordinate with any third-party apps using Basic Auth to migrate them to OAuth 2.0 / modern auth",
+      "Source: NIST SP 800-171 r2 §3.5.4; Microsoft Security Baseline for M365"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — Disable Legacy Auth (and Plan Migration)", warning:true, steps:[
+      "Disable legacy authentication in Entra admin center: Conditional Access → Block legacy auth client apps",
+      "This reduces risk but does not resolve the underlying compliance gap — Commercial M365 is not authorized for CUI",
+      "POAM note: document both the legacy auth remediation and the CUI cloud migration plan",
+      "Source: NIST SP 800-171 r2 §3.5.4; DFARS 252.204-7012"
+    ]}
+  },
+
+  // ── 3.3.1  Audit Logging ──────────────────────────────────
+  "3.3.1": {
+    gcchigh: { label:"M365 GCC High — Enable and Retain Unified Audit Log", steps:[
+      "Confirm Unified Audit Log (UAL) is on: Microsoft Purview compliance portal → Audit → Start recording (green = already active for E3/E5)",
+      "Set audit retention: E5/G5 licenses include 1-year retention; extend to 10 years with the Audit (Premium) add-on if your contracts require it",
+      "Enable mailbox auditing for all users (should be on by default): run `Set-OrganizationConfig -AuditDisabled $false` in Exchange Online PowerShell",
+      "Export critical event types to a SIEM or storage account: Purview → Audit → New search → export results",
+      "Verify admin and privileged user actions are captured: search for Operations = 'Add member to role', 'Set-MsolUserPassword'",
+      "Source: NIST SP 800-171 r2 §3.3.1; Microsoft Purview Audit documentation; DoD CMMC CAP §AU-2"
+    ]},
+    gcc: { label:"M365 GCC — Enable and Retain Unified Audit Log", steps:[
+      "Open Microsoft Purview compliance portal → Audit → confirm 'Recording user and admin activity' is On",
+      "E3/G3 licenses include 90-day UAL retention; E5/G5 provides 1 year — review against your retention requirements",
+      "Enable Advanced Audit events if licensed (E5): Purview → Audit → Audit retention policies",
+      "Configure a recurring audit search export to a secure location for long-term retention",
+      "Source: NIST SP 800-171 r2 §3.3.1; FedRAMP M365 GCC SSP Control AU-2"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — UAL Available but Environment Not CUI-Authorized", warning:true, steps:[
+      "Enable Unified Audit Log in Purview compliance portal as a compensating control",
+      "Note that even with logging enabled, CUI stored in Commercial M365 violates DFARS 252.204-7012 — logging does not resolve that gap",
+      "Plan migration to GCC/GCC High and include logging configuration in the migration runbook",
+      "Source: NIST SP 800-171 r2 §3.3.1; DFARS 252.204-7012"
+    ]}
+  },
+
+  // ── 3.3.5  Audit Log Correlation / SIEM ──────────────────
+  "3.3.5": {
+    gcchigh: { label:"M365 GCC High — Connect to Microsoft Sentinel (GCC High)", steps:[
+      "Microsoft Sentinel is available in Azure Government — deploy a Sentinel workspace in the same Azure Government tenant as your M365 GCC High",
+      "Connect the M365 GCC High data connector: Sentinel → Data connectors → Microsoft 365 (GCC High) → enable all log types (Exchange, SharePoint, Teams, Entra)",
+      "Enable Microsoft Defender XDR connector for correlated security incidents across Defender, Entra, and Purview",
+      "Create Analytic Rules for: multiple failed logins, after-hours privilege escalations, bulk file downloads from SharePoint",
+      "Set up a daily triage workbook: Sentinel → Workbooks → Microsoft 365 Security",
+      "Source: NIST SP 800-171 r2 §3.3.5; DISA Cloud Security Guide; Azure Government Sentinel docs"
+    ]},
+    gcc: { label:"M365 GCC — Connect to Microsoft Sentinel (Commercial Sentinel / GCC)", steps:[
+      "Sentinel for GCC tenants can connect via the standard Azure commercial tenant (GCC M365 logs route through Microsoft's compliance boundary)",
+      "Deploy Sentinel in Azure: create a Log Analytics workspace → Add Sentinel → Data connectors → Microsoft 365",
+      "Enable Defender for Cloud Apps connector for shadow IT and anomalous access detection",
+      "As a lighter-weight alternative (lower cost): configure Purview Audit Premium search with automated export to a storage account and weekly review",
+      "Source: NIST SP 800-171 r2 §3.3.5; Microsoft Sentinel for GCC documentation"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — Sentinel Available but Underlying Gap Remains", warning:true, steps:[
+      "Microsoft Sentinel is available for Commercial tenants and provides strong log correlation capability",
+      "However, if CUI is stored in Commercial M365, log correlation does not resolve the authorization gap",
+      "Implement Sentinel as a compensating control while planning migration; document both in POAM",
+      "Source: NIST SP 800-171 r2 §3.3.5; DFARS 252.204-7012"
+    ]}
+  },
+
+  // ── 3.1.3  CUI Flow Control / DLP ────────────────────────
+  "3.1.3": {
+    gcchigh: { label:"M365 GCC High — Configure Purview DLP and Sensitivity Labels for CUI", steps:[
+      "Open Microsoft Purview compliance portal → Data loss prevention → Policies → Create policy",
+      "Select 'Custom' or use the built-in U.S. Department of Defense template; apply to Exchange, SharePoint, OneDrive, Teams",
+      "Create a Sensitive Information Type for your CUI categories (contract numbers, ITAR-controlled data patterns)",
+      "Configure sensitivity labels in Purview → Information protection: 'CUI' label with encryption, watermark, and access restrictions",
+      "Set up auto-labeling policy to automatically classify documents containing CUI keywords or patterns",
+      "Block sharing of CUI-labeled content with external users unless explicitly whitelisted",
+      "Source: NIST SP 800-171 r2 §3.1.3; NARA CUI Registry; DISA M365 STIG; 32 CFR Part 2002 §2002.20"
+    ]},
+    gcc: { label:"M365 GCC — Configure Purview DLP and Sensitivity Labels for CUI", steps:[
+      "Open Microsoft Purview compliance portal → Data loss prevention → Policies → Create policy targeting Exchange, SharePoint, OneDrive, Teams",
+      "Create sensitivity labels in Purview → Information protection: 'CUI — Basic' and 'CUI — Specified' tiers as needed",
+      "Apply DLP rule: if content is labeled CUI, block external sharing and alert the compliance team",
+      "Verify DLP policies apply to Teams messages — CUI must not leak through Teams chat to external users",
+      "Source: NIST SP 800-171 r2 §3.1.3; FedRAMP M365 GCC SSP Control AC-4; NARA CUI Registry"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — DLP Available but Fundamental Gap Remains", warning:true, steps:[
+      "Configure DLP and sensitivity labels as immediate compensating controls to prevent further CUI exposure",
+      "Purview → DLP: block CUI-labeled files from being shared externally or with personal accounts",
+      "These controls reduce risk but do not authorize Commercial M365 for CUI under DFARS 252.204-7012",
+      "Migration to GCC or GCC High must be planned and tracked in a formal POAM",
+      "Source: NIST SP 800-171 r2 §3.1.3; DFARS 252.204-7012(b)(2)(ii)(D)"
+    ]}
+  },
+
+  // ── 3.1.12  Remote Access Monitoring ─────────────────────
+  "3.1.12": {
+    gcchigh: { label:"M365 GCC High — Monitor Remote Access via Entra Sign-in Logs", steps:[
+      "Open Microsoft Entra admin center → Monitoring → Sign-in logs — review daily for anomalies",
+      "Create Conditional Access policy: block sign-ins from non-compliant or unregistered devices (requires Entra P1 + Intune MDM enrollment)",
+      "Enable risky sign-in detection: Entra → Protection → Identity Protection → Risky sign-ins → configure alerts",
+      "Configure Named Locations to flag sign-ins from outside expected geographies",
+      "Export sign-in logs to Sentinel for automated anomaly detection and alerting",
+      "Source: NIST SP 800-171 r2 §3.1.12; DISA Entra ID STIG; NIST SP 800-46 Remote Access Guide"
+    ]},
+    gcc: { label:"M365 GCC — Monitor Remote Access via Entra Sign-in Logs", steps:[
+      "Entra admin center → Monitoring → Sign-in logs: configure retention export to storage account if >30-day retention needed (E3 default)",
+      "Enable Entra Identity Protection for risky sign-in alerts (requires Entra P2 / M365 G5 or add-on)",
+      "As a lightweight alternative: create a Conditional Access report-only policy to surface risky logins without blocking",
+      "Review sign-in logs weekly — focus on: legacy auth, unfamiliar locations, high-frequency failed attempts",
+      "Source: NIST SP 800-171 r2 §3.1.12; NIST SP 800-46"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — Entra Logs Available; CUI Authorization Gap Persists", warning:true, steps:[
+      "Enable and review Entra sign-in logs as a compensating control for remote access visibility",
+      "Implement Conditional Access to block access from non-managed devices",
+      "Document as POAM compensating control while migrating CUI to GCC/GCC High",
+      "Source: NIST SP 800-171 r2 §3.1.12; DFARS 252.204-7012"
+    ]}
+  },
+
+  // ── 3.1.1  Authorized Access ──────────────────────────────
+  "3.1.1": {
+    gcchigh: { label:"M365 GCC High — Control Authorized Access via Entra ID", steps:[
+      "Entra admin center → Users: audit all accounts — disable any former employees or contractors not yet removed",
+      "Implement automated off-boarding: create a Lifecycle Workflow in Entra (requires Entra ID Governance license) to disable accounts on HR termination date",
+      "Enable Access Reviews: Entra → Identity Governance → Access Reviews → create a quarterly review of all licensed users",
+      "Configure Privileged Identity Management (PIM) for admin roles: just-in-time elevation with approval workflow (requires Entra P2)",
+      "Document all authorized users in your SSP with roles, access level, and authorization date",
+      "Source: NIST SP 800-171 r2 §3.1.1; DISA Entra STIG AC-2"
+    ]},
+    gcc: { label:"M365 GCC — Control Authorized Access via Entra ID", steps:[
+      "Audit all M365 licensed users: M365 admin center → Users → Active users — remove any unauthorized accounts",
+      "Set up an off-boarding checklist: disable account, remove licenses, revoke sessions (Entra → Users → Revoke sessions)",
+      "Create a recurring calendar reminder to review user list quarterly",
+      "If budget allows, enable Entra Access Reviews (P2) for automated periodic attestation",
+      "Source: NIST SP 800-171 r2 §3.1.1; FedRAMP M365 GCC SSP Control AC-2"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — Access Control Available; Environment Not CUI-Authorized", warning:true, steps:[
+      "Implement Entra access controls (account reviews, off-boarding) as compensating controls",
+      "These are necessary but not sufficient — Commercial M365 cannot host CUI under DFARS 252.204-7012",
+      "Source: NIST SP 800-171 r2 §3.1.1; DFARS 252.204-7012"
+    ]}
+  },
+
+  // ── 3.1.2  Least Privilege / Role-Based Access ───────────
+  "3.1.2": {
+    gcchigh: { label:"M365 GCC High — Enforce Role-Based Access in M365 and SharePoint", steps:[
+      "Review M365 admin roles: M365 admin center → Roles → Role assignments — ensure no excess Global Admin assignments",
+      "Apply least-privilege SharePoint permissions: use SharePoint Groups (Owners/Members/Visitors) instead of individual user permissions",
+      "Configure Microsoft Teams channel permissions: private channels for CUI — only add authorized members",
+      "Enable Privileged Identity Management for M365 admin roles: assign as 'Eligible' not 'Active' so elevation is time-limited and audited",
+      "Run Entra → Identity Governance → Access Reviews quarterly for SharePoint site membership",
+      "Source: NIST SP 800-171 r2 §3.1.2; DISA M365 STIG AC-6; SharePoint security hardening guide"
+    ]},
+    gcc: { label:"M365 GCC — Enforce Role-Based Access in M365 and SharePoint", steps:[
+      "Audit M365 admin roles: confirm only authorized users have Global Admin, SharePoint Admin, Exchange Admin roles",
+      "Apply SharePoint site permissions at the group level — avoid individual user direct assignments",
+      "Enable sensitivity labels on SharePoint sites to enforce access tiers: Purview → Information protection → Label policies",
+      "Review Teams membership for channels that handle CUI — ensure external users are not present",
+      "Source: NIST SP 800-171 r2 §3.1.2; FedRAMP M365 GCC SSP Control AC-6"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — RBAC Configuration Available; Underlying Gap Persists", warning:true, steps:[
+      "Implement SharePoint group-based permissions and Teams channel controls as compensating controls",
+      "Tighten admin roles to minimum necessary",
+      "These do not address the core issue: Commercial M365 is not authorized to store CUI — migration is required",
+      "Source: NIST SP 800-171 r2 §3.1.2; DFARS 252.204-7012"
+    ]}
+  },
+
+  // ── 3.14.1  Flaw Remediation / Patching ──────────────────
+  "3.14.1": {
+    gcchigh: { label:"M365 GCC High — Automate Patching via Microsoft Intune", steps:[
+      "Deploy Microsoft Intune (included in M365 G3/G5 or EMS E3/E5): Intune admin center (intune.microsoft.com) → Devices → Windows updates",
+      "Create an Update Ring: Intune → Devices → Windows 10 and later update rings → target CUI device groups",
+      "Set deferral: Quality updates 0–7 days, Feature updates per your change management window",
+      "For servers: configure Windows Server Update Services (WSUS) or Azure Update Manager",
+      "Run a compliance report: Intune → Reports → Windows updates → identify non-compliant devices",
+      "Source: NIST SP 800-171 r2 §3.14.1; DISA Windows 10 STIG SI-2; CISA Known Exploited Vulnerabilities catalog"
+    ]},
+    gcc: { label:"M365 GCC — Automate Patching via Microsoft Intune", steps:[
+      "Enable Intune (M365 G3+ includes it) → configure Update Rings for Windows endpoints",
+      "Set quality update deferral to 7 days for testing, then auto-install",
+      "Enroll all CUI-handling devices into Intune MDM — unenrolled devices cannot be managed or validated",
+      "Review the Intune compliance dashboard weekly and remediate non-compliant devices",
+      "Source: NIST SP 800-171 r2 §3.14.1; FedRAMP M365 GCC SSP Control SI-2"
+    ]},
+    commercial: { label:"Patching via Intune (Available in All M365 Tiers)", steps:[
+      "Microsoft Intune is available in Commercial M365 — configure Update Rings to automate patching",
+      "Patching is independent of the CUI authorization gap; implement Intune regardless of migration timeline",
+      "Source: NIST SP 800-171 r2 §3.14.1"
+    ]}
+  },
+
+  // ── 3.14.2  Malicious Code Protection ────────────────────
+  "3.14.2": {
+    gcchigh: { label:"M365 GCC High — Enable Microsoft Defender for Endpoint and M365 Defender", steps:[
+      "Enable Defender for Endpoint: Microsoft Defender portal (security.microsoft.com via .us domain for GCC High) → Settings → Endpoints → onboard devices",
+      "Enable Microsoft Defender Antivirus on all endpoints via Intune: Endpoint security → Antivirus → configure real-time protection",
+      "Enable Defender for Office 365 (Plan 1 or 2): Microsoft Defender portal → Email & collaboration → Policies → Safe Attachments + Safe Links",
+      "Configure Anti-malware policy in Exchange Online: Defender portal → Email & collaboration → Policies → Anti-malware",
+      "Review Defender Incidents daily: Defender portal → Incidents & alerts",
+      "Source: NIST SP 800-171 r2 §3.14.2; DISA Windows Defender AV STIG V2R3; CISA Shields Up guidance"
+    ]},
+    gcc: { label:"M365 GCC — Enable Microsoft Defender Antivirus and Defender for Office 365", steps:[
+      "Enable Defender for Endpoint (included in M365 G3/G5): onboard devices via Intune or Group Policy",
+      "Configure Safe Attachments and Safe Links policies in the Defender portal for email-borne malware protection",
+      "Enable Defender Antivirus real-time protection on all endpoints — verify via Intune compliance policy",
+      "Review the Defender Security Center for active threats weekly",
+      "Source: NIST SP 800-171 r2 §3.14.2; FedRAMP M365 GCC SSP Control SI-3"
+    ]},
+    commercial: { label:"Defender Available in Commercial (Implement Regardless of Migration Timeline)", steps:[
+      "Microsoft Defender for Endpoint and Defender for Office 365 are available in Commercial M365 — implement now",
+      "This does not resolve the CUI authorization gap but is required regardless as a security baseline",
+      "Source: NIST SP 800-171 r2 §3.14.2"
+    ]}
+  },
+
+  // ── 3.14.3  Security Alerts ───────────────────────────────
+  "3.14.3": {
+    gcchigh: { label:"M365 GCC High — Configure Security Alerts in Microsoft Defender", steps:[
+      "Open Microsoft Defender portal → Settings → Alerts: verify email notification rules are configured for high-severity alerts",
+      "Configure alert suppression rules for known-good events to reduce noise",
+      "Enable Entra Identity Protection alerts: Entra admin center → Protection → Identity Protection → Alerts → Notify on risky users",
+      "Set up weekly Secure Score review: Defender portal → Secure Score — track improvement over time and export for POAM evidence",
+      "Forward alerts to your SIEM (Sentinel) for centralized triage",
+      "Source: NIST SP 800-171 r2 §3.14.3; DISA M365 STIG SI-4; Microsoft Secure Score documentation"
+    ]},
+    gcc: { label:"M365 GCC — Configure Security Alerts in Microsoft Defender", steps:[
+      "Microsoft Defender portal → Settings → Email notifications: add security team email for high and medium severity incidents",
+      "Review Microsoft Secure Score weekly and track as a KPI: Defender portal → Secure Score",
+      "Enable Entra risk-based alerts for compromised accounts: Entra Identity Protection (requires Entra P2)",
+      "Source: NIST SP 800-171 r2 §3.14.3; FedRAMP M365 GCC SSP Control SI-4"
+    ]},
+    commercial: { label:"Defender Alerts Available in Commercial (Implement Regardless)", steps:[
+      "Configure Defender alert notifications and Secure Score monitoring — independent of migration",
+      "Source: NIST SP 800-171 r2 §3.14.3"
+    ]}
+  },
+
+  // ── 3.4.6  Least Functionality ───────────────────────────
+  "3.4.6": {
+    gcchigh: { label:"M365 GCC High — Restrict App Access via Entra App Registrations and Intune", steps:[
+      "Review Entra app registrations: Entra admin center → Applications → Enterprise applications → audit all apps with access to your tenant",
+      "Disable user consent for apps: Entra → App registrations → User settings → 'Users can consent to apps' = No (require admin approval)",
+      "Block side-loaded apps on managed devices: Intune → Apps → App protection policies → restrict data transfer to policy-managed apps only",
+      "Configure Conditional Access: require managed device (Intune compliant) to access M365 resources",
+      "Remove any third-party apps not approved in your software inventory",
+      "Source: NIST SP 800-171 r2 §3.4.6; DISA M365 STIG CM-7; Microsoft Entra App Management best practices"
+    ]},
+    gcc: { label:"M365 GCC — Restrict App Access and Disable User Consent", steps:[
+      "Disable user consent for OAuth apps: Entra → Enterprise applications → Consent and permissions → 'Do not allow user consent'",
+      "Review and remove unapproved third-party apps in Entra Enterprise applications",
+      "Configure Intune app protection policies to prevent data leakage to unmanaged apps on mobile devices",
+      "Source: NIST SP 800-171 r2 §3.4.6; FedRAMP M365 GCC SSP Control CM-7"
+    ]},
+    commercial: { label:"App Control Available in Commercial (Implement Regardless)", steps:[
+      "Disable user OAuth consent and restrict app access — applies regardless of M365 tier",
+      "Source: NIST SP 800-171 r2 §3.4.6"
+    ]}
+  },
+
+  // ── 3.13.1  Boundary Protection ──────────────────────────
+  "3.13.1": {
+    gcchigh: { label:"M365 GCC High — Enforce Network Boundary Controls", steps:[
+      "Configure Microsoft Defender for Cloud Apps (MDCA) to monitor and control cloud app access at the network boundary",
+      "Set up Tenant Restrictions v2 in Entra: prevents users from authenticating to personal/unauthorized Microsoft tenants from managed networks",
+      "Enable Microsoft 365 network connectivity testing: M365 admin center → Health → Network connectivity — verify optimal routing",
+      "For GCC High, ensure network traffic routes through Microsoft's authorized government peering (ExpressRoute Government or approved internet breakout)",
+      "Block access to commercial M365 tenants from devices handling CUI (Tenant Restrictions policy)",
+      "Source: NIST SP 800-171 r2 §3.13.1; DISA M365 GCC High STIG SC-7; Microsoft GCC High network requirements"
+    ]},
+    gcc: { label:"M365 GCC — Enforce Network Boundary and Tenant Isolation Controls", steps:[
+      "Enable Tenant Restrictions: prevent CUI device users from logging into personal Microsoft accounts from managed networks",
+      "Configure Conditional Access: require compliant devices (Intune-enrolled) to access M365 — this enforces boundary at the identity layer",
+      "Review Defender for Cloud Apps shadow IT report: MDCA → Discovered apps — identify and block unapproved cloud services",
+      "Source: NIST SP 800-171 r2 §3.13.1; FedRAMP M365 GCC SSP Control SC-7"
+    ]},
+    commercial: { label:"⚠️ Commercial M365 — Boundary Controls Available; Authorization Gap Persists", warning:true, steps:[
+      "Implement Tenant Restrictions and Conditional Access as boundary controls",
+      "These are compensating controls — the underlying CUI authorization gap requires migration to GCC/GCC High",
+      "Source: NIST SP 800-171 r2 §3.13.1; DFARS 252.204-7012"
+    ]}
+  }
+
+};
+
+// ── Generic Commercial warning for controls without specific content ──
+function getCommercialFallback() {
+  return {
+    label: "⚠️ Commercial M365 — CUI Not Authorized in This Environment",
+    warning: true,
+    steps: [
+      "Commercial Microsoft 365 is NOT FedRAMP authorized for CUI storage or processing under DFARS 252.204-7012.",
+      "All general remediation steps apply, but compliance cannot be achieved until CUI is migrated to M365 GCC (FedRAMP Moderate) or M365 GCC High (DoD IL2/IL4/IL5).",
+      "Open a POAM item for the migration and document interim compensating controls.",
+      "Source: DFARS 252.204-7012(b)(2)(ii)(D); 32 CFR Part 2002; DoD CIO Cloud Strategy"
+    ]
+  };
+}
+
+// ── Inject M365-specific steps into the Gap Wizard card ──
+function buildM365WizardSection(controlId) {
+  const tier = getM365Tier();
+  if (!tier) return '';
+
+  const rem = M365_REMEDIATION[controlId];
+  let data = rem ? rem[tier] : null;
+
+  // For Commercial: always surface a warning even if no specific content
+  if (!data && tier === 'commercial') data = getCommercialFallback();
+  if (!data) return '';
+
+  const isWarning = !!data.warning;
+  const bgColor     = isWarning ? '#fef2f2' : '#eff6ff';
+  const borderColor = isWarning ? '#fca5a5' : '#93c5fd';
+  const labelColor  = isWarning ? '#b91c1c' : '#1d4ed8';
+  const icon        = isWarning ? '⚠️' : '🏢';
+
+  const stepsHtml = data.steps.map((s, i) => {
+    const isSource = s.startsWith('Source:');
+    return `<li style="${isSource ? 'color:#6b7280;font-style:italic;font-size:11px;margin-top:6px' : ''}">${s}</li>`;
+  }).join('');
+
+  return `<div class="wiz-section" style="background:${bgColor};border-left:3px solid ${borderColor};padding:14px 20px">
+    <div class="wiz-section-label" style="color:${labelColor};border-color:${borderColor}">${icon} ${data.label}</div>
+    <ol class="wiz-steps">${stepsHtml}</ol>
+  </div>`;
+}
+
 function buildWizardCard(idx) {
   const c    = wizardControls[idx];
   const pl   = PLAIN_LANGUAGE[c.id] || { mean:'See NIST SP 800-171 Rev 2 for full requirement text.', looks:'Control is fully implemented and evidence is documented.', steps:['Review the NIST SP 800-171 Rev 2 requirement','Implement the required control','Document implementation in the SSP'] };
@@ -3847,6 +4219,7 @@ function buildWizardCard(idx) {
           <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Evidence required to satisfy this control:</div>
           <div style="font-size:12px;color:#475569;line-height:1.5">${c.evidence}</div>
         </div>
+        ${buildM365WizardSection(c.id)}
       </div>
 
       <div class="wiz-nav">
