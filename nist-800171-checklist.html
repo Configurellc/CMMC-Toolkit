@@ -3574,14 +3574,36 @@ function saveScopeAnswer(qid, val) {
   autoPopulateSspFromScope();
 }
 
+// Questions where one option is mutually exclusive with all others
+const EXCLUSIVE_NONE_OPTS = {
+  'q7_receive_cui': 'We do not receive CUI directly'
+};
+
 function toggleScopeOpt(qid, val, multi, el) {
   const ans = loadScopeAnswers();
   if (multi) {
     let arr = Array.isArray(ans[qid]) ? ans[qid] : [];
-    const idx = arr.indexOf(val);
-    if (idx>=0) arr.splice(idx,1); else arr.push(val);
+    const noneOpt = EXCLUSIVE_NONE_OPTS[qid];
+    if (noneOpt) {
+      if (val === noneOpt) {
+        // "None" selected — clear all others, or deselect if already selected
+        arr = arr.includes(noneOpt) ? [] : [noneOpt];
+      } else {
+        // Real option selected — remove "none", toggle this value
+        arr = arr.filter(v => v !== noneOpt);
+        const idx = arr.indexOf(val);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(val);
+      }
+      // Refresh all chips in this question to reflect new state
+      el.closest('.scope-q-options').querySelectorAll('.scope-opt').forEach(o => {
+        o.classList.toggle('selected', arr.includes(o.textContent.trim()));
+      });
+    } else {
+      const idx = arr.indexOf(val);
+      if (idx>=0) arr.splice(idx,1); else arr.push(val);
+      el.classList.toggle('selected', arr.includes(val));
+    }
     ans[qid] = arr;
-    el.classList.toggle('selected', arr.includes(val));
   } else {
     ans[qid] = val;
     el.closest('.scope-q-options').querySelectorAll('.scope-opt').forEach(o => o.classList.remove('selected'));
@@ -3643,6 +3665,10 @@ function updateScopeProgress() {
       }
     }
   }
+
+  // Refresh critical findings (answers may have just triggered or cleared a warning)
+  const findings = document.getElementById('scope-findings-container');
+  if (findings) findings.innerHTML = buildScopeCriticalFindings();
 
   // Overall complete banner
   const banner = document.getElementById('scopeCompleteBanner');
@@ -3721,33 +3747,40 @@ function buildScopeCriticalFindings() {
   const tier = getM365Tier();
   if (!nonCompliant.length && !tier) return '';
 
+  // Only surface warnings after the user has confirmed they handle CUI
+  const ans = loadScopeAnswers();
+  const cuiConfirmed = ans.q22_dfars === 'Yes' ||
+    (Array.isArray(ans.q21_cui_types) && ans.q21_cui_types.length > 0) ||
+    (Array.isArray(ans.q7_receive_cui) && ans.q7_receive_cui.length > 0 && !ans.q7_receive_cui.includes('We do not receive CUI directly')) ||
+    (Array.isArray(ans.q8_store_cui)   && ans.q8_store_cui.length > 0);
+  if (!cuiConfirmed) return '';
+
   let findings = [];
 
   if (isM365Commercial()) {
     findings.push({
       level: 'critical',
-      title: 'Microsoft 365 Commercial cannot store CUI',
-      body: 'Your organization is using a commercial Microsoft 365 subscription. CUI must be stored and processed in <strong>Microsoft 365 GCC or GCC High</strong> — standard commercial tenants are not authorized regardless of configuration. This is a foundational gap that affects AC, AU, IA, SC, and SI control families. Migration to GCC or GCC High is required before most other remediation steps will satisfy a C3PAO assessment.',
-      link: 'https://learn.microsoft.com/en-us/office365/servicedescriptions/office-365-platform-service-description/microsoft-365-government/gcc-high-and-dod'
+      title: 'Microsoft 365 Commercial cannot store Controlled Unclassified Information',
+      body: 'Your organization is using a standard commercial Microsoft 365 subscription. Controlled Unclassified Information (CUI) must be stored and processed in <strong>Microsoft 365 Government Community Cloud (GCC) or GCC High</strong> — standard commercial tenants are not authorized regardless of configuration. This is a foundational gap that will affect your entire assessment. Migration to GCC or GCC High is required before most other remediation steps will satisfy an assessor.',
+      link: 'https://www.microsoft.com/en-us/microsoft-365/enterprise/government-plans-and-pricing'
     });
   }
 
   if (getGoogleTier() === 'commercial') {
     findings.push({
       level: 'critical',
-      title: 'Google Workspace Commercial cannot store CUI',
-      body: 'Standard Google Workspace is not FedRAMP authorized for CUI. You must use <strong>Google Workspace for Government</strong> (FedRAMP Moderate) to store or process CUI. This affects multiple control families across AC, AU, SC, and SI domains.',
-      link: 'https://workspace.google.com/intl/en/products/gmail/government/'
+      title: 'Google Workspace Commercial cannot store Controlled Unclassified Information',
+      body: 'Standard Google Workspace is not authorized under the Federal Risk and Authorization Management Program (FedRAMP) for Controlled Unclassified Information (CUI). You must use <strong>Google Workspace for Government</strong> (FedRAMP Moderate authorized) to store or process CUI.',
+      link: null
     });
   }
 
-  const ans = loadScopeAnswers();
   const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
   if (storage.some(s => s.includes('Dropbox') || s.includes('Box'))) {
     findings.push({
       level: 'critical',
-      title: 'Dropbox / Box cannot store CUI',
-      body: 'Dropbox and Box standard tiers are not FedRAMP authorized for CUI storage. CUI stored in these systems must be migrated to a FedRAMP-authorized alternative (SharePoint/OneDrive GCC, Google Drive for Government, or AWS GovCloud S3). This affects MP, SC, and AC controls.',
+      title: 'Dropbox / Box cannot store Controlled Unclassified Information',
+      body: 'Dropbox and Box standard tiers are not authorized under the Federal Risk and Authorization Management Program (FedRAMP) for Controlled Unclassified Information (CUI) storage. CUI stored in these systems must be migrated to a FedRAMP-authorized alternative such as SharePoint/OneDrive Government Community Cloud (GCC), Google Drive for Government, or AWS GovCloud.',
       link: null
     });
   }
@@ -3755,9 +3788,9 @@ function buildScopeCriticalFindings() {
   if (tier === 'gcc' && (ans.q23_export === 'Yes')) {
     findings.push({
       level: 'warning',
-      title: 'M365 GCC High required for ITAR/EAR export-controlled CUI',
-      body: 'Your scoping indicates you handle export-controlled CUI (ITAR/EAR). Microsoft 365 GCC is only FedRAMP Moderate — export-controlled CUI requires <strong>GCC High</strong>, which meets FedRAMP High and DoD IL4/IL5 requirements.',
-      link: 'https://learn.microsoft.com/en-us/office365/servicedescriptions/office-365-platform-service-description/microsoft-365-government/gcc-high-and-dod'
+      title: 'GCC High required for export-controlled Controlled Unclassified Information',
+      body: 'Your scoping indicates you handle export-controlled Controlled Unclassified Information under the International Traffic in Arms Regulations (ITAR) or Export Administration Regulations (EAR). Microsoft 365 Government Community Cloud (GCC) is only FedRAMP Moderate — export-controlled CUI requires <strong>GCC High</strong>, which meets FedRAMP High and Department of Defense Impact Level 4/5 (IL4/IL5) requirements.',
+      link: 'https://www.microsoft.com/en-us/microsoft-365/enterprise/government-plans-and-pricing'
     });
   }
 
@@ -3819,7 +3852,7 @@ function buildScopeView() {
       ✅ Scoping complete — your SSP has been pre-populated.
       <button class="scope-btn secondary" style="margin-left:auto;padding:5px 12px;font-size:12px" onclick="setMode('templates')">View SSP →</button>
     </div>
-    ${buildScopeCriticalFindings()}`;
+    <div id="scope-findings-container">${buildScopeCriticalFindings()}</div>`;
 
   SCOPE_SECTIONS.forEach((sec, i) => {
     const secDone = isSectionDone(sec, ans);
