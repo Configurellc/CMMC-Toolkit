@@ -3704,13 +3704,16 @@ function autoPopulateSspFromScope() {
   if (!tplData.sysDesc  && descNarrative)  saveTplOrg('sysDesc',  descNarrative);
 }
 
-<<<<<<< Updated upstream
 function getSectionStatus(sec, ans) {
   const total = sec.questions.length;
   const done  = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
   if (done === total) return 'complete';
   if (done > 0)       return 'partial';
   return 'empty';
+}
+
+function isSectionDone(sec, ans) {
+  return getSectionStatus(sec, ans) === 'complete';
 }
 
 function buildScopeCriticalFindings() {
@@ -3781,46 +3784,29 @@ const SECTION_DESCS = {
   cui_type:  'CUI categories, DFARS clause, export controls'
 };
 
-function buildScopeView(activeSectionId) {
-=======
-function isSectionDone(sec, ans) {
-  return sec.questions.every(q => { const a = ans[q.id]; return a && (Array.isArray(a) ? a.length > 0 : true); });
-}
-
 function toggleScopeCard(secId) {
   const card = document.getElementById('scope-card-' + secId);
   if (!card) return;
   const isOpen = card.classList.contains('sc-active');
-  // close all
   SCOPE_SECTIONS.forEach(s => {
     const c = document.getElementById('scope-card-' + s.id);
     if (c) c.classList.remove('sc-active');
   });
-  // if it was closed, open it
   if (!isOpen) card.classList.add('sc-active');
 }
 
 function buildScopeView() {
->>>>>>> Stashed changes
   const container = document.getElementById('scopeView');
   const ans = loadScopeAnswers();
   const {done, total} = getScopeCompletionCount();
   const allDone = done === total;
   const pct = Math.round(done / total * 100);
 
-  // Auto-open first incomplete section if none specified
-  if (!activeSectionId) {
-    const first = SCOPE_SECTIONS.find(s => getSectionStatus(s, ans) !== 'complete');
-    activeSectionId = first ? first.id : null;
-  }
-
-  // First incomplete section gets opened by default
   const firstIncomplete = SCOPE_SECTIONS.find(s => !isSectionDone(s, ans));
 
   let html = `<div class="scope-wrap">
     <div class="scope-header">
-<<<<<<< Updated upstream
-      <h2>🗺️ System Scope Questionnaire</h2>
+      <h2>System Scope Questionnaire</h2>
       <p>Define your CUI boundary before the Gap Wizard. Answers auto-populate your SSP.</p>
       <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
         <div style="flex:1;height:6px;background:rgba(255,255,255,.2);border-radius:3px">
@@ -3836,70 +3822,23 @@ function buildScopeView() {
     ${buildScopeCriticalFindings()}`;
 
   SCOPE_SECTIONS.forEach((sec, i) => {
-    const secDone   = sec.questions.filter(q=>{const a=ans[q.id];return a&&(Array.isArray(a)?a.length>0:true);}).length;
-    const status    = getSectionStatus(sec, ans);
-    const isActive  = sec.id === activeSectionId;
-    const nextSec   = SCOPE_SECTIONS[i + 1];
+    const secDone = isSectionDone(sec, ans);
+    const status  = getSectionStatus(sec, ans);
+    const secAns  = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
+    const isOpen  = !secDone && firstIncomplete && firstIncomplete.id === sec.id;
+    const nextSec = SCOPE_SECTIONS[i + 1];
 
     const badgeBg    = status==='complete' ? '#dcfce7' : status==='partial' ? '#fef9c3' : '#f1f5f9';
     const badgeColor = status==='complete' ? '#166534' : status==='partial' ? '#854d0e' : '#94a3b8';
-    const badgeText  = status==='complete' ? `${sec.questions.length}/${sec.questions.length} ✓` : `${secDone}/${sec.questions.length}`;
-    const chevron    = isActive ? '▾' : '›';
-    const dimmed     = !isActive && status === 'empty' ? ' dimmed' : '';
-    const activeClass= isActive ? ' active' : '';
-
-    html += `<div class="scope-card${activeClass}${dimmed}">
-      <div class="scope-card-head" onclick="buildScopeView(${isActive ? 'null' : `'${sec.id}'`})">
-        <div style="flex:1">
-          <div class="scope-card-title">${sec.title.replace(/Section \d+ — /,'')}</div>
-          <div class="scope-card-desc">${SECTION_DESCS[sec.id]}</div>
-        </div>
-        <span class="scope-card-badge" style="background:${badgeBg};color:${badgeColor}">${badgeText}</span>
-        <span class="scope-card-chevron${isActive?' open':''}">${chevron}</span>
-      </div>`;
-
-    if (isActive) {
-      html += `<div class="scope-card-body">`;
-      sec.questions.forEach(q => {
-        const saved = ans[q.id] || (q.multi ? [] : null);
-        html += `<div class="scope-q">
-          <div class="scope-q-label">${q.label}</div>
-          <div class="scope-q-source">📖 ${q.source}</div>
-          <div class="scope-q-options">`;
-        q.options.forEach(opt => {
-          const sel = q.multi ? (Array.isArray(saved)&&saved.includes(opt)) : saved===opt;
-          html += `<span class="scope-opt${q.multi?' multi':''}${sel?' selected':''}"
-            onclick="toggleScopeOpt('${q.id}','${escHtml(opt)}',${q.multi},this)">${escHtml(opt)}</span>`;
-        });
-        html += `</div></div>`;
-      });
-      html += `<div class="scope-card-footer">
-        ${nextSec
-          ? `<button class="scope-btn primary" onclick="buildScopeView('${nextSec.id}')">Next: ${nextSec.title.replace(/Section \d+ — /,'')} →</button>`
-          : `<button class="scope-btn primary" onclick="buildScopeView(null)">✓ Finish Scoping</button>`}
-      </div>
-      </div>`;
-    }
-
-    html += `</div>`;
-=======
-      <h2>System Scope Questionnaire</h2>
-      <p>Define your CUI system boundary before completing the Gap Wizard. Answers auto-populate your SSP and help identify which controls apply to your environment.</p>
-    </div>
-    <div class="scope-complete-banner ${allDone?'':'hidden'}" id="scopeCompleteBanner">
-      ✅ Scoping complete — ${total}/${total} questions answered. SSP fields pre-populated.
-      <button class="scope-btn secondary" style="margin-left:auto;padding:6px 14px;font-size:12px" onclick="setMode('templates')">View SSP →</button>
-    </div>`;
-
-  SCOPE_SECTIONS.forEach(sec => {
-    const secDone = isSectionDone(sec, ans);
-    const secAns  = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
-    const isOpen  = !secDone && firstIncomplete && firstIncomplete.id === sec.id;
+    const badgeText  = status==='complete' ? `${sec.questions.length}/${sec.questions.length} ✓` : `${secAns}/${sec.questions.length}`;
 
     html += `<div class="scope-card${secDone?' sc-done':''}${isOpen?' sc-active':''}" id="scope-card-${sec.id}">
       <div class="scope-card-head" onclick="toggleScopeCard('${sec.id}')">
-        <div class="scope-card-title">${sec.title}</div>
-        <span class="scope-card-prog" id="scope-prog-${sec.id}">${secAns} / ${sec.questions.length}</span>
+        <div style="flex:1">
+          <div class="scope-card-title">${sec.title.replace(/Section \d+ — /,'')}</div>
+          <div class="scope-card-desc" style="font-size:11px;color:#64748b;margin-top:2px">${SECTION_DESCS[sec.id]||''}</div>
+        </div>
+        <span class="scope-card-prog" id="scope-prog-${sec.id}" style="background:${badgeBg};color:${badgeColor}">${badgeText}</span>
         <span class="scope-card-chev">▼</span>
       </div>
       <div class="scope-card-body">`;
@@ -3918,8 +3857,12 @@ function buildScopeView() {
       html += `</div></div>`;
     });
 
-    html += `</div></div>`; // close body + card
->>>>>>> Stashed changes
+    html += `<div class="scope-card-footer">
+      ${nextSec
+        ? `<button class="scope-btn primary" onclick="toggleScopeCard('${nextSec.id}');document.getElementById('scope-card-${nextSec.id}').scrollIntoView({behavior:'smooth',block:'nearest'})">Next: ${nextSec.title.replace(/Section \d+ — /,'')} →</button>`
+        : `<button class="scope-btn primary" onclick="toggleScopeCard(null)">✓ Done</button>`}
+    </div>
+    </div></div>`; // close body + card
   });
 
   html += `<div class="scope-actions">
