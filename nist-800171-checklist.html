@@ -140,6 +140,9 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .audit-control.hidden{ display:none; }
 .audit-ctrl-header{ display:grid; grid-template-columns:68px 1fr auto; gap:10px; align-items:center; padding:9px 14px 6px; cursor:pointer; user-select:none; background:#fafbfc; }
 .audit-ctrl-header:hover{ background:#f1f5f9; }
+.audit-control.ac-pass .audit-ctrl-header{ background:#f0fdf4; border-left:3px solid #22c55e; }
+.audit-control.ac-fail .audit-ctrl-header{ background:#fef2f2; border-left:3px solid #ef4444; }
+.audit-control.ac-partial .audit-ctrl-header{ background:#fffbeb; border-left:3px solid #f59e0b; }
 .audit-ctrl-id{ font-family:monospace; font-size:11px; font-weight:700; color:#6366f1; }
 .audit-ctrl-title{ font-size:12px; font-weight:600; color:#334155; line-height:1.35; }
 .audit-ctrl-meta{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
@@ -373,60 +376,6 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .pol-overall-num { font-size:22px; font-weight:800; color:#1e293b; }
 .pol-overall-lbl { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; }
 
-/* ── System Scope ─────────────────────────────────────────── */
-.scope-wrap { max-width:760px; margin:0 auto; padding:24px 0 40px; }
-.scope-header { background:linear-gradient(135deg,#1a1a2e,#4f46e5); border-radius:14px; padding:32px 36px; color:#fff; margin-bottom:24px; }
-.scope-header h2 { margin:0 0 8px; font-size:20px; }
-.scope-header p { margin:0; font-size:13px; opacity:.8; }
-.scope-warning { background:#fef9c3; border:1px solid #fde047; border-radius:10px; padding:12px 16px; font-size:13px; color:#854d0e; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
-.scope-warning.hidden { display:none; }
-/* ── Scope accordion cards ── */
-.scope-card { background:#fff; border-radius:12px; border:1.5px solid #e2e8f0; margin-bottom:10px; overflow:hidden; transition:border-color .2s, box-shadow .2s; }
-.scope-card.sc-active { border-color:#6366f1; box-shadow:0 2px 14px rgba(79,70,229,.1); }
-.scope-card.sc-done { border-color:#86efac; }
-.scope-card-head { padding:13px 18px; display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
-.scope-card-head:hover { background:#fafbfc; }
-.scope-card.sc-done .scope-card-head { background:#f0fdf4; }
-.scope-card-title { font-size:13px; font-weight:700; color:#1e293b; flex:1; letter-spacing:.1px; text-transform:uppercase; }
-.scope-card.sc-done .scope-card-title { color:#15803d; }
-.scope-card-prog { font-size:11px; font-weight:700; background:#e2e8f0; color:#64748b; padding:2px 9px; border-radius:10px; white-space:nowrap; }
-.scope-card.sc-done .scope-card-prog { background:#dcfce7; color:#15803d; }
-.scope-card-chev { font-size:11px; color:#94a3b8; transition:transform .2s; flex-shrink:0; }
-.scope-card.sc-active .scope-card-chev { transform:rotate(180deg); color:#6366f1; }
-.scope-card-body { border-top:1px solid #e2e8f0; display:none; }
-.scope-card.sc-active .scope-card-body { display:block; }
-.scope-q { padding:12px 18px; border-bottom:1px solid #f1f5f9; }
-.scope-q:last-child { border-bottom:none; }
-.scope-q-label { font-size:13px; font-weight:600; color:#1e293b; margin-bottom:3px; }
-.scope-q-source { font-size:10px; color:#6366f1; margin-bottom:8px; background:#eef2ff; display:inline-block; padding:1px 7px; border-radius:20px; }
-.scope-q-options { display:flex; flex-wrap:wrap; gap:6px; }
-.scope-opt { border:1.5px solid #e2e8f0; border-radius:7px; padding:5px 11px; font-size:12px; color:#475569; cursor:pointer; transition:all .15s; background:#fff; user-select:none; }
-/* keep legacy class names working for any references */
-.scope-section { display:none; }
-.scope-section-icon { display:none; }
-.scope-opt:hover { border-color:#6366f1; color:#4f46e5; background:#eef2ff; }
-.scope-opt.selected { border-color:#4f46e5; background:#4f46e5; color:#fff; }
-.scope-opt.multi { }
-.scope-actions { display:flex; gap:12px; justify-content:flex-end; margin-top:24px; }
-.scope-btn { padding:10px 22px; border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
-.scope-btn.primary { background:#4f46e5; color:#fff; }
-.scope-btn.primary:hover { background:#4338ca; }
-.scope-btn.secondary { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
-.scope-btn.secondary:hover { background:#e2e8f0; }
-.scope-complete-banner { background:#dcfce7; border:1px solid #86efac; border-radius:10px; padding:14px 20px; font-size:13px; color:#166534; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
-.scope-complete-banner.hidden { display:none; }
-.scope-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.06); border:1.5px solid #e2e8f0; margin-bottom:10px; overflow:hidden; transition:border-color .2s, box-shadow .2s; }
-.scope-card.active { border-color:#6366f1; box-shadow:0 2px 14px rgba(79,70,229,.13); }
-.scope-card.dimmed { opacity:.7; }
-.scope-card-head { padding:14px 18px; display:flex; align-items:center; gap:12px; cursor:pointer; }
-.scope-card-head:hover { background:#fafbff; }
-.scope-card-title { font-size:13px; font-weight:700; color:#1e293b; }
-.scope-card-desc { font-size:11px; color:#64748b; margin-top:2px; }
-.scope-card-badge { font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; margin-right:6px; }
-.scope-card-chevron { font-size:12px; color:#94a3b8; flex-shrink:0; }
-.scope-card-chevron.open { color:#6366f1; font-weight:700; }
-.scope-card-body { border-top:1px solid #e0e7ff; padding:16px 18px; background:#fafafa; }
-.scope-card-footer { display:flex; justify-content:flex-end; margin-top:12px; }
 
 /* ── Gap Wizard ───────────────────────────────────────────── */
 .wiz-wrap { max-width:760px; margin:0 auto; padding:24px 0 40px; }
@@ -442,6 +391,9 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .wiz-intro-body p { font-size:13px; color:#64748b; line-height:1.6; margin:0 0 20px; }
 .wiz-start-btn { background:#4f46e5; color:#fff; border:none; border-radius:8px; padding:12px 28px; font-size:14px; font-weight:700; cursor:pointer; }
 .wiz-start-btn:hover { background:#4338ca; }
+.wiz-restart-btn { background:none; color:#94a3b8; border:none; font-size:12px; font-weight:600; cursor:pointer; padding:6px 4px; margin-left:12px; }
+.wiz-restart-btn:hover { color:#64748b; }
+.wiz-btn.success:disabled { background:#94a3b8; border-color:#94a3b8; opacity:1; cursor:not-allowed; }
 
 .wiz-card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; }
 .wiz-card-header { padding:16px 24px; display:flex; align-items:center; gap:10px; }
@@ -760,9 +712,7 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
     </div>
     <div class="top-right">
       <div class="mode-toggle">
-        <button class="mode-btn" id="btnScope" onclick="setMode('scope')">
-          <span class="tab-icon">🗺️</span><span class="tab-label">Scope</span>
-        </button>
+
         <button class="mode-btn active" id="btnWizard" onclick="setMode('wizard')">
           <span class="tab-icon">🧭</span><span class="tab-label">Gap Wizard</span>
         </button>
@@ -856,7 +806,6 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
   <div id="sprsView" style="display:none"></div>
   <div id="templatesView" style="display:none"></div>
   <div id="wizardView" style="display:none"></div>
-  <div id="scopeView" style="display:none"></div>
 </div>
 
 <script>
@@ -1206,6 +1155,7 @@ function setConn(state, label) {
 
 async function initSupabase() {
   if (!isConfigured()) {
+    loadLocalData();
     document.getElementById('loadingOverlay').classList.add('hidden');
     setConn('connecting', '💾 Local Mode');
     buildOrgView();
@@ -1257,11 +1207,21 @@ async function initSupabase() {
 function getOrg(id){ return orgStatus[id]||'not-started'; }
 function getAudit(id){ return auditStatus[id]||'not-reviewed'; }
 
+// ── Local-mode persistence (used when Supabase is not configured) ──
+const LOCAL_ORG_KEY   = 'cmmc_org_status';
+const LOCAL_AUDIT_KEY = 'cmmc_audit_status';
+function saveLocalOrg()   { try { localStorage.setItem(LOCAL_ORG_KEY,   JSON.stringify(orgStatus));   } catch(e){} }
+function saveLocalAudit() { try { localStorage.setItem(LOCAL_AUDIT_KEY, JSON.stringify(auditStatus)); } catch(e){} }
+function loadLocalData() {
+  try { const d = JSON.parse(localStorage.getItem(LOCAL_ORG_KEY)   || '{}'); Object.assign(orgStatus,   d); } catch(e){}
+  try { const d = JSON.parse(localStorage.getItem(LOCAL_AUDIT_KEY) || '{}'); Object.assign(auditStatus, d); } catch(e){}
+}
+
 async function setOrg(id, val) {
   orgStatus[id] = val;
   refreshOrgRow(id);
   updateAllProgress();
-  if (!configured||!db) return;
+  if (!configured||!db) { saveLocalOrg(); return; }
   const row = document.getElementById('org-row-'+id);
   if (row) row.classList.add('saving');
   try {
@@ -1279,8 +1239,9 @@ async function setAuditObj(id, val) {
   syncOrgFromAOs(id.replace(/\[[a-z]\]$/,''));
   refreshOrgRow(id.replace(/\[[a-z]\]$/,'')); // keeps fail badge in sync even if status didn't change
   updateWizardAOBanner(id.replace(/\[[a-z]\]$/,''));
+  updateWizardCompleteBtn(id.replace(/\[[a-z]\]$/,''));
   updateAllProgress();
-  if (!configured||!db) return;
+  if (!configured||!db) { saveLocalAudit(); return; }
   const row = document.getElementById('obj-row-'+id);
   if (row) row.classList.add('saving');
   try {
@@ -1297,11 +1258,13 @@ async function resetAll() {
     orgStatus = {};
     CONTROLS.forEach(c => refreshOrgRow(c.id));
     if (configured && db) await db.from('checklist_status').delete().neq('control_id','__none__');
+    else saveLocalOrg();
   } else {
     auditStatus = {};
     ALL_OBJECTIVES.forEach(o => refreshObjRow(o.id));
     CONTROLS.forEach(c => updateAuditCtrlHeader(c.id));
     if (configured && db) await db.from('assessment_objectives').delete().neq('objective_id','__none__');
+    else saveLocalAudit();
   }
   updateAllProgress();
 }
@@ -1322,23 +1285,21 @@ function setMode(m) {
   document.getElementById('btnSPRS').classList.toggle('active', m==='sprs');
   document.getElementById('btnTpl').classList.toggle('active', m==='templates');
   document.getElementById('btnWizard').classList.toggle('active', m==='wizard');
-  document.getElementById('btnScope').classList.toggle('active', m==='scope');
   document.getElementById('orgView').style.display        = m==='org'        ? '' : 'none';
   document.getElementById('auditView').style.display      = m==='auditor'    ? '' : 'none';
   document.getElementById('sprsView').style.display       = m==='sprs'       ? '' : 'none';
   document.getElementById('templatesView').style.display  = m==='templates'  ? '' : 'none';
   document.getElementById('wizardView').style.display     = m==='wizard'     ? '' : 'none';
-  document.getElementById('scopeView').style.display      = m==='scope'      ? '' : 'none';
   document.getElementById('orgProgRow').style.display     = m==='org'        ? '' : 'none';
   document.getElementById('auditProgRow').style.display   = m==='auditor'    ? '' : 'none';
   document.getElementById('sprsProgRow').style.display    = m==='sprs'       ? '' : 'none';
   document.getElementById('orgFilters').style.display     = (m==='org'||m==='sprs') ? '' : 'none';
   document.getElementById('auditFilters').style.display   = m==='auditor'    ? '' : 'none';
-  document.getElementById('statsGrid').style.display      = (m==='sprs'||m==='templates'||m==='wizard'||m==='scope') ? 'none' : '';
+  document.getElementById('statsGrid').style.display      = (m==='sprs'||m==='templates'||m==='wizard') ? 'none' : '';
+  document.getElementById('controlsBar').style.display   = (m==='wizard'||m==='sprs'||m==='templates') ? 'none' : '';
   if (m==='sprs')      buildSPRSView();
   if (m==='templates') buildTemplatesView();
   if (m==='wizard')    buildWizardView();
-  if (m==='scope')     buildScopeView();
   updateStats();
   applyFilters();
   requestAnimationFrame(updateControlsBarTop);
@@ -1369,21 +1330,18 @@ function updateAllProgress() {
   DOMAINS.forEach(d => {
     const dc = CONTROLS.filter(c=>c.domain===d);
     const ddone = dc.filter(c=>getOrg(c.id)==='complete').length;
-    const fill  = document.getElementById('dfill-org-'+d)||document.getElementById('dfill-aud-'+d);
-    const lbl   = document.getElementById('dlabel-org-'+d)||document.getElementById('dlabel-aud-'+d);
-    if (currentMode==='org') {
-      const f = document.getElementById('dfill-org-'+d);
-      const l = document.getElementById('dlabel-org-'+d);
-      if (f) f.style.width = Math.round(ddone/dc.length*100)+'%';
-      if (l) l.textContent = ddone+'/'+dc.length;
-    } else {
-      const dObjs = ALL_OBJECTIVES.filter(o=>o.domain===d);
-      const dMet  = dObjs.filter(o=>getAudit(o.id)==='met').length;
-      const f = document.getElementById('dfill-aud-'+d);
-      const l = document.getElementById('dlabel-aud-'+d);
-      if (f) f.style.width = Math.round(dMet/dObjs.length*100)+'%';
-      if (l) l.textContent = dMet+'/'+dObjs.length;
-    }
+    // Always update both Org and Auditor domain headers regardless of active tab
+    const fo = document.getElementById('dfill-org-'+d);
+    const lo = document.getElementById('dlabel-org-'+d);
+    if (fo) fo.style.width = Math.round(ddone/dc.length*100)+'%';
+    if (lo) lo.textContent = ddone+'/'+dc.length;
+
+    const dObjs = ALL_OBJECTIVES.filter(o=>o.domain===d);
+    const dMet  = dObjs.filter(o=>getAudit(o.id)==='met').length;
+    const fa = document.getElementById('dfill-aud-'+d);
+    const la = document.getElementById('dlabel-aud-'+d);
+    if (fa) fa.style.width = Math.round(dMet/dObjs.length*100)+'%';
+    if (la) la.textContent = dMet+'/'+dObjs.length;
   });
 
   // SPRS progress bar
@@ -1548,11 +1506,23 @@ function toggleOrgAO(ctrlId) {
 
 function updateAuditCtrlHeader(ctrlId) {
   const objs = OBJECTIVES[ctrlId]||[];
-  const met = objs.filter(([l])=>getAudit(ctrlId+'['+l+']')==='met').length;
+  const met    = objs.filter(([l])=>getAudit(ctrlId+'['+l+']')==='met').length;
   const notMet = objs.filter(([l])=>getAudit(ctrlId+'['+l+']')==='not-met').length;
-  const na = objs.filter(([l])=>getAudit(ctrlId+'['+l+']')==='not-applicable').length;
+  const na     = objs.filter(([l])=>getAudit(ctrlId+'['+l+']')==='not-applicable').length;
+  const reviewed = met + notMet + na;
+
   const el = document.getElementById('audit-meta-'+ctrlId);
-  if (el) el.textContent = `${met} met · ${notMet} not met · ${na} N/A · ${objs.length-met-notMet-na} not reviewed`;
+  if (el) el.textContent = `${met} met · ${notMet} not met · ${na} N/A · ${objs.length-reviewed} not reviewed`;
+
+  // Color the control block by pass/fail state
+  const block = document.getElementById('audit-ctrl-'+ctrlId);
+  if (block) {
+    block.classList.remove('ac-pass','ac-fail','ac-partial');
+    if (reviewed === 0) return; // nothing assessed yet — no color
+    if (notMet > 0)                               block.classList.add('ac-fail');
+    else if (met + na === objs.length && met > 0) block.classList.add('ac-pass');
+    else                                          block.classList.add('ac-partial');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3279,6 +3249,15 @@ const PLAIN_LANGUAGE = {
 let wizardControls = [];  // incomplete controls sorted by pts desc
 let wizardIndex    = 0;   // current position
 let wizardStarted  = false;
+let wizardViewing  = false; // true only while actively looking at a card (resets on tab switch)
+
+const WIZARD_STATE_KEY = 'cmmc_wizard_state';
+function saveWizardState() {
+  try { localStorage.setItem(WIZARD_STATE_KEY, JSON.stringify({index: wizardIndex, started: wizardStarted})); } catch(e) {}
+}
+function loadWizardPersistedState() {
+  try { return JSON.parse(localStorage.getItem(WIZARD_STATE_KEY) || '{}'); } catch(e) { return {}; }
+}
 
 function initWizard() {
   wizardControls = CONTROLS.filter(c => getOrg(c.id) !== 'complete').sort((a,b) => {
@@ -3287,637 +3266,22 @@ function initWizard() {
     const pb = wb==='special'?5:wb===undefined?1:(wb===0?0:wb);
     return pb - pa || a.id.localeCompare(b.id, undefined, {numeric:true});
   });
-  wizardIndex   = 0;
-  wizardStarted = false;
-}
-
-// ═══════════════════════════════════════════════════════════
-// System Scope
-// ═══════════════════════════════════════════════════════════
-const SCOPE_KEY = 'cmmc_scope_v1';
-const SCOPE_DONE_KEY = 'cmmc_scope_done';
-
-const SCOPE_SECTIONS = [
-  {
-    id: 'inventory',
-    icon: '🖥️',
-    title: 'Section 1 — System Inventory',
-    questions: [
-      {
-        id: 'q1_email',
-        label: 'Do you use cloud-based email?',
-        source: 'NIST SP 800-18 §2.1 — System Description; NIST SP 800-37 §2.1 — System Boundary',
-        multi: false,
-        options: [
-          'Microsoft 365 GCC High (Government Community Cloud High)',
-          'Microsoft 365 GCC (Government Community Cloud)',
-          'Microsoft 365 Commercial (standard business subscription)',
-          'Google Workspace for Government (FedRAMP authorized)',
-          'Google Workspace Commercial (standard)',
-          'Other cloud email',
-          'On-premises email only',
-          'No email system'
-        ]
-      },
-      {
-        id: 'q2_storage',
-        label: 'Do you use cloud file storage?',
-        source: 'NIST SP 800-18 §2.1 — System Description; CMMC CAP Scoping Guidance',
-        multi: true,
-        options: [
-          'SharePoint / OneDrive (part of M365 GCC High)',
-          'SharePoint / OneDrive (part of M365 GCC)',
-          'SharePoint / OneDrive (Commercial)',
-          'Google Drive for Government (FedRAMP authorized)',
-          'Google Drive Commercial',
-          'Dropbox / Box',
-          'AWS S3 or similar',
-          'Other cloud storage',
-          'No cloud file storage'
-        ]
-      },
-      {
-        id: 'q3_servers',
-        label: 'Do you have on-premises servers?',
-        source: 'NIST SP 800-37 §2.1 — System Boundary Definition',
-        multi: false,
-        options: ['Yes — 1 to 5 servers','Yes — 6 to 20 servers','Yes — more than 20 servers','No on-premises servers']
-      },
-      {
-        id: 'q4_cloud_compute',
-        label: 'Do you use cloud computing platforms?',
-        source: 'NIST SP 800-18 §2.1 — System Description; CMMC CAP Scoping Guidance',
-        multi: true,
-        options: ['Microsoft Azure','Amazon Web Services (AWS)','Google Cloud Platform','Other cloud platform','No cloud computing platforms']
-      },
-      {
-        id: 'q5_devices',
-        label: 'What types of end-user devices does your organization use?',
-        source: 'NIST SP 800-171 Rev 2 AC.1.001 — Authorized Users and Devices',
-        multi: true,
-        options: ['Windows laptops','Mac laptops','Windows desktops','Tablets (company-owned)','Smartphones (company-owned)']
-      },
-      {
-        id: 'q6_network',
-        label: 'Do you manage your own network infrastructure?',
-        source: 'NIST SP 800-171 Rev 2 SC family — System & Communications Protection',
-        multi: false,
-        options: ['Yes — firewalls, switches, routers','Yes — basic router/firewall only','No — managed by ISP or MSP','No network infrastructure']
-      }
-    ]
-  },
-  {
-    id: 'cui_flow',
-    icon: '🔄',
-    title: 'Section 2 — CUI Flow',
-    questions: [
-      {
-        id: 'q7_receive_cui',
-        label: 'How do you receive CUI from the government?',
-        source: '32 CFR Part 2002 — CUI Regulation; DoD CUI Registry',
-        multi: true,
-        options: ['Email (unencrypted)','Email (encrypted / S/MIME)','Secure portal or SFTP','Physical media (USB, CD)','In person / verbal','We do not receive CUI directly']
-      },
-      {
-        id: 'q8_store_cui',
-        label: 'How do you store CUI?',
-        source: '32 CFR Part 2002; NIST SP 800-171 MP family — Media Protection',
-        multi: true,
-        options: ['Cloud storage (FedRAMP authorized)','Cloud storage (not FedRAMP authorized)','On-premises servers','Local hard drives / workstations','Removable media (USB, external drives)','Printed / paper documents']
-      },
-      {
-        id: 'q9_share_cui',
-        label: 'How do you share CUI internally?',
-        source: '32 CFR Part 2002; NIST SP 800-171 AC family — Access Control',
-        multi: true,
-        options: ['Email','Shared network drive','Microsoft Teams / SharePoint','Slack or similar tools','In person only']
-      },
-      {
-        id: 'q10_removable',
-        label: 'Is CUI ever stored on removable media (USB drives, CDs, external hard drives)?',
-        source: 'NIST SP 800-171 Rev 2 MP.1.118, MP.2.120 — Media Protection',
-        multi: false,
-        options: ['Yes — regularly','Yes — occasionally','No — we prohibit removable media','No — never occurs in practice']
-      },
-      {
-        id: 'q11_auto_process',
-        label: 'Do any systems automatically process or generate CUI (e.g. ERP, database, engineering tool)?',
-        source: 'NIST SP 800-37 §2.1 — System Boundary; CMMC CAP Scoping Guidance',
-        multi: false,
-        options: ['Yes','No','Unsure']
-      }
-    ]
-  },
-  {
-    id: 'workforce',
-    icon: '👥',
-    title: 'Section 3 — Workforce',
-    questions: [
-      {
-        id: 'q12_headcount',
-        label: 'How many employees have access to CUI?',
-        source: 'NIST SP 800-171 Rev 2 AC.1.001 — Limit system access to authorized users',
-        multi: false,
-        options: ['1 – 5','6 – 15','16 – 50','51 – 100','More than 100']
-      },
-      {
-        id: 'q13_remote',
-        label: 'Do employees work remotely?',
-        source: 'NIST SP 800-171 Rev 2 AC.2.006 — Remote Access; SC.3.177 — Encrypted Transmission',
-        multi: false,
-        options: ['Yes — fully remote','Yes — some employees are remote','No — all employees work on-site']
-      },
-      {
-        id: 'q14_byod',
-        label: 'Do employees use personal devices for work (BYOD)?',
-        source: 'NIST SP 800-171 Rev 2 AC.1.001; CMMC CAP Scoping Guidance — BYOD',
-        multi: false,
-        options: ['Yes — personal devices access CUI','Yes — personal devices used but not for CUI','No — company devices only']
-      },
-      {
-        id: 'q15_it',
-        label: 'Do you have a dedicated IT person or team?',
-        source: 'NIST SP 800-171 Rev 2 AT family — Awareness & Training; CA family — Assessment',
-        multi: false,
-        options: ['Yes — internal IT staff','Yes — outsourced Managed Service Provider (MSP)','No dedicated IT support']
-      }
-    ]
-  },
-  {
-    id: 'external',
-    icon: '🔌',
-    title: 'Section 4 — External Connections',
-    questions: [
-      {
-        id: 'q16_vpn',
-        label: 'Do you use a VPN for remote access?',
-        source: 'NIST SP 800-171 Rev 2 SC.3.177 — Encrypted Remote Sessions; AC.2.006 — Remote Access',
-        multi: false,
-        options: ['Yes — all remote users required to use VPN','Yes — VPN available but not required','No VPN in use','No remote access at all']
-      },
-      {
-        id: 'q17_third_party_it',
-        label: 'Does third-party IT support have access to your systems?',
-        source: 'NIST SP 800-171 Rev 2 AC.1.001; CA.2.157 — Third-Party Assessment',
-        multi: false,
-        options: ['Yes — ongoing remote access','Yes — on-site access only','Yes — both remote and on-site','No third-party IT access']
-      },
-      {
-        id: 'q18_subcontractors',
-        label: 'Do subcontractors or teaming partners receive CUI from you?',
-        source: 'DFARS 252.204-7012 §(c) — Flow-Down Requirements to Subcontractors',
-        multi: false,
-        options: ['Yes — they receive CUI regularly','Yes — occasionally','No — CUI stays within our organization']
-      },
-      {
-        id: 'q19_gov_portals',
-        label: 'Do you connect to government networks or portals to handle CUI?',
-        source: 'NIST SP 800-171 Rev 2 SC.3.181 — Network Segmentation; CMMC CAP Scoping Guidance',
-        multi: true,
-        options: ['PIEE (Procurement Integrated Enterprise Environment)','SAFE (Secure Access File Exchange)','DISA portals','Other government portal','No government network connections']
-      },
-      {
-        id: 'q20_mfa',
-        label: 'Do you currently use multi-factor authentication (MFA)?',
-        source: 'NIST SP 800-171 Rev 2 IA.3.083 — Multi-Factor Authentication for privileged and non-privileged accounts',
-        multi: false,
-        options: ['Yes — MFA enabled everywhere','Yes — MFA on some systems only','No — not yet implemented']
-      }
-    ]
-  },
-  {
-    id: 'cui_type',
-    icon: '🏷️',
-    title: 'Section 5 — CUI Type',
-    questions: [
-      {
-        id: 'q21_cui_types',
-        label: 'What type(s) of CUI does your organization handle?',
-        source: 'DoD CUI Registry (archives.gov/cui); 32 CFR Part 2002 — CUI Categories',
-        multi: true,
-        options: ['Technical Data / Engineering drawings','Export Controlled (ITAR/EAR)','Privacy / Personally Identifiable Information (PII)','Law Enforcement Sensitive','Financial / Procurement','General CUI (other)']
-      },
-      {
-        id: 'q22_dfars',
-        label: 'Do your contracts include DFARS clause 252.204-7012?',
-        source: 'DFARS 252.204-7012 — Safeguarding Covered Defense Information; this is the clause that triggers CMMC requirements',
-        multi: false,
-        options: ['Yes','No','Unsure — I need to check my contracts']
-      },
-      {
-        id: 'q23_export',
-        label: 'Is any of your CUI marked export controlled (CUI//SP-ITAR or CUI//CTI)?',
-        source: '22 CFR 120–130 (ITAR); 15 CFR 730–774 (EAR); NIST SP 800-171B — Enhanced Security Requirements',
-        multi: false,
-        options: ['Yes','No','Unsure']
-      }
-    ]
-  }
-];
-
-const SCOPE_STORAGE_KEY = 'cmmc_scope_answers';
-
-function loadScopeAnswers() {
-  try { return JSON.parse(localStorage.getItem(SCOPE_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
-}
-
-// ── Platform detection helpers ──────────────────────────────
-function getM365Tier() {
-  const ans = loadScopeAnswers();
-  const email   = ans.q1_email || '';
-  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
-  if (email.includes('GCC High') || storage.some(s => s.includes('GCC High'))) return 'gcchigh';
-  if (email.includes('GCC (Government') || storage.some(s => s.includes('GCC)')))  return 'gcc';
-  if (email.includes('Commercial') || storage.some(s => s.includes('Commercial'))) return 'commercial';
-  return null; // not using M365
-}
-
-function hasM365() { return getM365Tier() !== null; }
-function isM365Commercial() { return getM365Tier() === 'commercial'; }
-
-function getGoogleTier() {
-  const ans = loadScopeAnswers();
-  const email   = ans.q1_email || '';
-  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
-  if (email.includes('Google Workspace for Government') || storage.some(s => s.includes('Google Drive for Government'))) return 'gov';
-  if (email.includes('Google Workspace Commercial') || storage.some(s => s.includes('Google Drive Commercial'))) return 'commercial';
-  return null;
-}
-
-function hasNonCompliantCloud() {
-  const ans = loadScopeAnswers();
-  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
-  const nonCompliant = [];
-  if (isM365Commercial()) nonCompliant.push('Microsoft 365 Commercial');
-  if (getGoogleTier() === 'commercial') nonCompliant.push('Google Workspace Commercial');
-  if (storage.some(s => s.includes('Dropbox') || s.includes('Box'))) nonCompliant.push('Dropbox/Box');
-  return nonCompliant;
-}
-
-function getPlatformProfile() {
-  return {
-    m365Tier:       getM365Tier(),
-    hasM365:        hasM365(),
-    isM365Commercial: isM365Commercial(),
-    googleTier:     getGoogleTier(),
-    nonCompliantCloud: hasNonCompliantCloud(),
-    hasAWS:         (loadScopeAnswers().q4_cloud_compute || []).some(x => x.includes('AWS')),
-    hasAzure:       (loadScopeAnswers().q4_cloud_compute || []).some(x => x.includes('Azure')),
-  };
-}
-
-function saveScopeAnswer(qid, val) {
-  const ans = loadScopeAnswers();
-  ans[qid] = val;
-  localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(ans));
-  updateScopeProgress();
-  autoPopulateSspFromScope();
-}
-
-// Questions where one option is mutually exclusive with all others
-const EXCLUSIVE_NONE_OPTS = {
-  'q7_receive_cui': 'We do not receive CUI directly'
-};
-
-function toggleScopeOpt(qid, val, multi, el) {
-  const ans = loadScopeAnswers();
-  if (multi) {
-    let arr = Array.isArray(ans[qid]) ? ans[qid] : [];
-    const noneOpt = EXCLUSIVE_NONE_OPTS[qid];
-    if (noneOpt) {
-      if (val === noneOpt) {
-        // "None" selected — clear all others, or deselect if already selected
-        arr = arr.includes(noneOpt) ? [] : [noneOpt];
-      } else {
-        // Real option selected — remove "none", toggle this value
-        arr = arr.filter(v => v !== noneOpt);
-        const idx = arr.indexOf(val);
-        if (idx >= 0) arr.splice(idx, 1); else arr.push(val);
-      }
-      // Refresh all chips in this question to reflect new state
-      el.closest('.scope-q-options').querySelectorAll('.scope-opt').forEach(o => {
-        o.classList.toggle('selected', arr.includes(o.textContent.trim()));
-      });
-    } else {
-      const idx = arr.indexOf(val);
-      if (idx>=0) arr.splice(idx,1); else arr.push(val);
-      el.classList.toggle('selected', arr.includes(val));
-    }
-    ans[qid] = arr;
-  } else {
-    ans[qid] = val;
-    el.closest('.scope-q-options').querySelectorAll('.scope-opt').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-  }
-  localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(ans));
-  updateScopeProgress();
-  autoPopulateSspFromScope();
-}
-
-function getScopeCompletionCount() {
-  const ans = loadScopeAnswers();
-  let total = 0, done = 0;
-  SCOPE_SECTIONS.forEach(s => s.questions.forEach(q => {
-    total++;
-    const a = ans[q.id];
-    if (a && (Array.isArray(a) ? a.length>0 : true)) done++;
-  }));
-  return {done, total};
-}
-
-function isScopeDone() {
-  const {done, total} = getScopeCompletionCount();
-  return done === total;
-}
-
-function updateScopeProgress() {
-  const ans = loadScopeAnswers();
-  let justCompletedIdx = -1;
-
-  SCOPE_SECTIONS.forEach((sec, idx) => {
-    const secDone = isSectionDone(sec, ans);
-    const secAns  = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
-
-    // Update progress chip
-    const chip = document.getElementById('scope-prog-'+sec.id);
-    if (chip) chip.textContent = secAns + ' / ' + sec.questions.length;
-
-    // Update card done/active classes
-    const card = document.getElementById('scope-card-'+sec.id);
-    if (card) {
-      const wasOpen = card.classList.contains('sc-active');
-      card.classList.toggle('sc-done', secDone);
-      // If this section just became complete and was open, mark it and close it
-      if (secDone && wasOpen) {
-        card.classList.remove('sc-active');
-        justCompletedIdx = idx;
-      }
-    }
-  });
-
-  // Open the next incomplete section after auto-close
-  if (justCompletedIdx >= 0) {
-    for (let i = justCompletedIdx + 1; i < SCOPE_SECTIONS.length; i++) {
-      if (!isSectionDone(SCOPE_SECTIONS[i], ans)) {
-        const next = document.getElementById('scope-card-'+SCOPE_SECTIONS[i].id);
-        if (next) { next.classList.add('sc-active'); next.scrollIntoView({behavior:'smooth', block:'nearest'}); }
-        break;
-      }
-    }
-  }
-
-  // Refresh critical findings (answers may have just triggered or cleared a warning)
-  const findings = document.getElementById('scope-findings-container');
-  if (findings) findings.innerHTML = buildScopeCriticalFindings();
-
-  // Overall complete banner
-  const banner = document.getElementById('scopeCompleteBanner');
-  if (banner) banner.classList.toggle('hidden', !isScopeDone());
-  const warn = document.getElementById('scopeWarnBanner');
-  if (warn) warn.classList.toggle('hidden', isScopeDone());
-}
-
-function autoPopulateSspFromScope() {
-  const ans = loadScopeAnswers();
-  const org = getTplOrg ? getTplOrg() : {};
-
-  // Build system boundary narrative
-  const parts = [];
-  if (ans.q1_email) parts.push('Email: ' + ans.q1_email + '.');
-  if (ans.q2_storage && ans.q2_storage.length) parts.push('File storage: ' + ans.q2_storage.join(', ') + '.');
-  if (ans.q3_servers) parts.push('On-premises servers: ' + ans.q3_servers + '.');
-  if (ans.q4_cloud_compute && ans.q4_cloud_compute.length && !ans.q4_cloud_compute.includes('No cloud computing platforms'))
-    parts.push('Cloud platforms: ' + ans.q4_cloud_compute.filter(x=>!x.startsWith('No')).join(', ') + '.');
-  if (ans.q5_devices && ans.q5_devices.length) parts.push('End-user devices: ' + ans.q5_devices.join(', ') + '.');
-  if (ans.q6_network) parts.push('Network infrastructure: ' + ans.q6_network + '.');
-  if (ans.q19_gov_portals && ans.q19_gov_portals.length && !ans.q19_gov_portals.includes('No government network connections'))
-    parts.push('Government connections: ' + ans.q19_gov_portals.filter(x=>!x.startsWith('No')).join(', ') + '.');
-
-  const scopeNarrative = parts.length
-    ? 'System boundary as defined during scoping assessment:\n\n' + parts.join('\n')
-    : '';
-
-  // Build environment narrative
-  const envParts = [];
-  if (ans.q13_remote) envParts.push('Remote work: ' + ans.q13_remote + '.');
-  if (ans.q14_byod) envParts.push('BYOD policy: ' + ans.q14_byod + '.');
-  if (ans.q15_it) envParts.push('IT support: ' + ans.q15_it + '.');
-  if (ans.q16_vpn) envParts.push('VPN: ' + ans.q16_vpn + '.');
-  if (ans.q17_third_party_it) envParts.push('Third-party IT access: ' + ans.q17_third_party_it + '.');
-  if (ans.q20_mfa) envParts.push('MFA status: ' + ans.q20_mfa + '.');
-
-  const envNarrative = envParts.length
-    ? 'Operating environment as defined during scoping assessment:\n\n' + envParts.join('\n')
-    : '';
-
-  // Build CUI type description
-  const cuiParts = [];
-  if (ans.q21_cui_types && ans.q21_cui_types.length) cuiParts.push('CUI types handled: ' + ans.q21_cui_types.join(', ') + '.');
-  if (ans.q7_receive_cui && ans.q7_receive_cui.length) cuiParts.push('CUI received via: ' + ans.q7_receive_cui.join(', ') + '.');
-  if (ans.q8_store_cui && ans.q8_store_cui.length) cuiParts.push('CUI stored in: ' + ans.q8_store_cui.join(', ') + '.');
-  if (ans.q18_subcontractors) cuiParts.push('CUI shared with subcontractors: ' + ans.q18_subcontractors + '.');
-  if (ans.q22_dfars) cuiParts.push('DFARS 252.204-7012 clause: ' + ans.q22_dfars + '.');
-  if (ans.q23_export) cuiParts.push('Export controlled CUI (ITAR/EAR): ' + ans.q23_export + '.');
-
-  const descNarrative = cuiParts.length
-    ? 'CUI profile as defined during scoping assessment:\n\n' + cuiParts.join('\n')
-    : '';
-
-  // Only populate SSP fields if they are currently empty (don't overwrite user edits)
-  const tplData = getTplOrg ? getTplOrg() : {};
-  if (!tplData.sysScope && scopeNarrative) saveTplOrg('sysScope', scopeNarrative);
-  if (!tplData.sysEnv   && envNarrative)   saveTplOrg('sysEnv',   envNarrative);
-  if (!tplData.sysDesc  && descNarrative)  saveTplOrg('sysDesc',  descNarrative);
-}
-
-function getSectionStatus(sec, ans) {
-  const total = sec.questions.length;
-  const done  = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
-  if (done === total) return 'complete';
-  if (done > 0)       return 'partial';
-  return 'empty';
-}
-
-function isSectionDone(sec, ans) {
-  return getSectionStatus(sec, ans) === 'complete';
-}
-
-function buildScopeCriticalFindings() {
-  const nonCompliant = hasNonCompliantCloud();
-  const tier = getM365Tier();
-  if (!nonCompliant.length && !tier) return '';
-
-  // Only surface warnings after the user has confirmed they handle CUI
-  const ans = loadScopeAnswers();
-  const cuiConfirmed = ans.q22_dfars === 'Yes' ||
-    (Array.isArray(ans.q21_cui_types) && ans.q21_cui_types.length > 0) ||
-    (Array.isArray(ans.q7_receive_cui) && ans.q7_receive_cui.length > 0 && !ans.q7_receive_cui.includes('We do not receive CUI directly')) ||
-    (Array.isArray(ans.q8_store_cui)   && ans.q8_store_cui.length > 0);
-  if (!cuiConfirmed) return '';
-
-  let findings = [];
-
-  if (isM365Commercial()) {
-    findings.push({
-      level: 'critical',
-      title: 'Microsoft 365 Commercial cannot store Controlled Unclassified Information',
-      body: 'Your organization is using a standard commercial Microsoft 365 subscription. Controlled Unclassified Information (CUI) must be stored and processed in <strong>Microsoft 365 Government Community Cloud (GCC) or GCC High</strong> — standard commercial tenants are not authorized regardless of configuration. This is a foundational gap that will affect your entire assessment. Migration to GCC or GCC High is required before most other remediation steps will satisfy an assessor.',
-      link: 'https://www.microsoft.com/en-us/microsoft-365/enterprise/government-plans-and-pricing'
-    });
-  }
-
-  if (getGoogleTier() === 'commercial') {
-    findings.push({
-      level: 'critical',
-      title: 'Google Workspace Commercial cannot store Controlled Unclassified Information',
-      body: 'Standard Google Workspace is not authorized under the Federal Risk and Authorization Management Program (FedRAMP) for Controlled Unclassified Information (CUI). You must use <strong>Google Workspace for Government</strong> (FedRAMP Moderate authorized) to store or process CUI.',
-      link: null
-    });
-  }
-
-  const storage = Array.isArray(ans.q2_storage) ? ans.q2_storage : [];
-  if (storage.some(s => s.includes('Dropbox') || s.includes('Box'))) {
-    findings.push({
-      level: 'critical',
-      title: 'Dropbox / Box cannot store Controlled Unclassified Information',
-      body: 'Dropbox and Box standard tiers are not authorized under the Federal Risk and Authorization Management Program (FedRAMP) for Controlled Unclassified Information (CUI) storage. CUI stored in these systems must be migrated to a FedRAMP-authorized alternative such as SharePoint/OneDrive Government Community Cloud (GCC), Google Drive for Government, or AWS GovCloud.',
-      link: null
-    });
-  }
-
-  if (tier === 'gcc' && (ans.q23_export === 'Yes')) {
-    findings.push({
-      level: 'warning',
-      title: 'GCC High required for export-controlled Controlled Unclassified Information',
-      body: 'Your scoping indicates you handle export-controlled Controlled Unclassified Information under the International Traffic in Arms Regulations (ITAR) or Export Administration Regulations (EAR). Microsoft 365 Government Community Cloud (GCC) is only FedRAMP Moderate — export-controlled CUI requires <strong>GCC High</strong>, which meets FedRAMP High and Department of Defense Impact Level 4/5 (IL4/IL5) requirements.',
-      link: 'https://www.microsoft.com/en-us/microsoft-365/enterprise/government-plans-and-pricing'
-    });
-  }
-
-  if (!findings.length) return '';
-
-  const bgColor  = f => f.level==='critical' ? '#fef2f2' : '#fffbeb';
-  const bdrColor = f => f.level==='critical' ? '#fca5a5' : '#fcd34d';
-  const txtColor = f => f.level==='critical' ? '#991b1b' : '#92400e';
-  const icon     = f => f.level==='critical' ? '🚨' : '⚠️';
-
-  return findings.map(f => `
-    <div style="background:${bgColor(f)};border:1.5px solid ${bdrColor(f)};border-radius:12px;padding:16px 18px;margin-bottom:12px">
-      <div style="font-size:13px;font-weight:700;color:${txtColor(f)};margin-bottom:6px">${icon(f)} Critical Finding: ${f.title}</div>
-      <div style="font-size:12px;color:${txtColor(f)};line-height:1.6">${f.body}</div>
-      ${f.link ? `<a href="${f.link}" target="_blank" style="font-size:11px;color:${txtColor(f)};margin-top:8px;display:inline-block;text-decoration:underline">Learn more →</a>` : ''}
-    </div>`).join('');
-}
-
-const SECTION_DESCS = {
-  inventory: 'Cloud services, devices, servers, network',
-  cui_flow:  'How CUI is received, stored, and shared',
-  workforce: 'Headcount, remote workers, BYOD, IT support',
-  external:  'VPN, third-party IT, subcontractors, gov portals',
-  cui_type:  'CUI categories, DFARS clause, export controls'
-};
-
-function toggleScopeCard(secId) {
-  const card = document.getElementById('scope-card-' + secId);
-  if (!card) return;
-  const isOpen = card.classList.contains('sc-active');
-  SCOPE_SECTIONS.forEach(s => {
-    const c = document.getElementById('scope-card-' + s.id);
-    if (c) c.classList.remove('sc-active');
-  });
-  if (!isOpen) card.classList.add('sc-active');
-}
-
-function buildScopeView() {
-  const container = document.getElementById('scopeView');
-  const ans = loadScopeAnswers();
-  const {done, total} = getScopeCompletionCount();
-  const allDone = done === total;
-  const pct = Math.round(done / total * 100);
-
-  const firstIncomplete = SCOPE_SECTIONS.find(s => !isSectionDone(s, ans));
-
-  let html = `<div class="scope-wrap">
-    <div class="scope-header">
-      <h2>System Scope Questionnaire</h2>
-      <p>Define your CUI boundary before the Gap Wizard. Answers auto-populate your SSP.</p>
-      <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
-        <div style="flex:1;height:6px;background:rgba(255,255,255,.2);border-radius:3px">
-          <div style="width:${pct}%;height:100%;background:#a5b4fc;border-radius:3px"></div>
-        </div>
-        <span style="font-size:11px;opacity:.8;white-space:nowrap">${done} / ${total} answered</span>
-      </div>
-    </div>
-    <div class="scope-complete-banner ${allDone?'':'hidden'}" id="scopeCompleteBanner">
-      ✅ Scoping complete — your SSP has been pre-populated.
-      <button class="scope-btn secondary" style="margin-left:auto;padding:5px 12px;font-size:12px" onclick="setMode('templates')">View SSP →</button>
-    </div>
-    <div id="scope-findings-container">${buildScopeCriticalFindings()}</div>`;
-
-  SCOPE_SECTIONS.forEach((sec, i) => {
-    const secDone = isSectionDone(sec, ans);
-    const status  = getSectionStatus(sec, ans);
-    const secAns  = sec.questions.filter(q => { const a=ans[q.id]; return a&&(Array.isArray(a)?a.length>0:true); }).length;
-    const isOpen  = !secDone && firstIncomplete && firstIncomplete.id === sec.id;
-    const nextSec = SCOPE_SECTIONS[i + 1];
-
-    const badgeBg    = status==='complete' ? '#dcfce7' : status==='partial' ? '#fef9c3' : '#f1f5f9';
-    const badgeColor = status==='complete' ? '#166534' : status==='partial' ? '#854d0e' : '#94a3b8';
-    const badgeText  = status==='complete' ? `${sec.questions.length}/${sec.questions.length} ✓` : `${secAns}/${sec.questions.length}`;
-
-    html += `<div class="scope-card${secDone?' sc-done':''}${isOpen?' sc-active':''}" id="scope-card-${sec.id}">
-      <div class="scope-card-head" onclick="toggleScopeCard('${sec.id}')">
-        <div style="flex:1">
-          <div class="scope-card-title">${sec.title.replace(/Section \d+ — /,'')}</div>
-          <div class="scope-card-desc" style="font-size:11px;color:#64748b;margin-top:2px">${SECTION_DESCS[sec.id]||''}</div>
-        </div>
-        <span class="scope-card-prog" id="scope-prog-${sec.id}" style="background:${badgeBg};color:${badgeColor}">${badgeText}</span>
-        <span class="scope-card-chev">▼</span>
-      </div>
-      <div class="scope-card-body">`;
-
-    sec.questions.forEach(q => {
-      const saved = ans[q.id] || (q.multi ? [] : null);
-      html += `<div class="scope-q">
-        <div class="scope-q-label">${q.label}</div>
-        <div class="scope-q-source">📖 ${q.source}</div>
-        <div class="scope-q-options">`;
-      q.options.forEach(opt => {
-        const sel = q.multi ? (Array.isArray(saved) && saved.includes(opt)) : saved === opt;
-        html += `<span class="scope-opt${q.multi?' multi':''}${sel?' selected':''}"
-          onclick="toggleScopeOpt('${q.id}','${escHtml(opt)}',${q.multi},this)">${escHtml(opt)}</span>`;
-      });
-      html += `</div></div>`;
-    });
-
-    html += `<div class="scope-card-footer">
-      ${nextSec
-        ? `<button class="scope-btn primary" onclick="toggleScopeCard('${nextSec.id}');document.getElementById('scope-card-${nextSec.id}').scrollIntoView({behavior:'smooth',block:'nearest'})">Next: ${nextSec.title.replace(/Section \d+ — /,'')} →</button>`
-        : `<button class="scope-btn primary" onclick="toggleScopeCard(null)">✓ Done</button>`}
-    </div>
-    </div></div>`; // close body + card
-  });
-
-  html += `<div class="scope-actions">
-    <button class="scope-btn secondary" onclick="if(confirm('Clear all scope answers?')){localStorage.removeItem('${SCOPE_STORAGE_KEY}');buildScopeView();}">Reset All</button>
-    <button class="scope-btn primary" onclick="setMode('wizard')">Continue to Gap Wizard →</button>
-  </div>
-  </div>`;
-
-  container.innerHTML = html;
+  // Restore persisted position instead of always resetting
+  const saved = loadWizardPersistedState();
+  wizardStarted = saved.started || false;
+  wizardIndex   = Math.min(saved.index || 0, Math.max(0, wizardControls.length - 1));
 }
 
 function buildWizardView() {
   initWizard();
+  wizardViewing = false; // Always show intro when switching tabs
   const container = document.getElementById('wizardView');
   if (!container) return;
 
-  if (!wizardStarted) {
-    container.innerHTML = buildWizardIntro();
-  } else if (wizardIndex >= wizardControls.length) {
+  if (wizardStarted && wizardIndex >= wizardControls.length) {
     container.innerHTML = buildWizardDone();
   } else {
-    container.innerHTML = buildWizardCard(wizardIndex);
+    container.innerHTML = buildWizardIntro();
   }
 }
 
@@ -3926,6 +3290,7 @@ function buildWizardIntro() {
   const fivePts   = wizardControls.filter(c=>SPRS_WEIGHTS[c.id]===5||SPRS_WEIGHTS[c.id]==='special').length;
   const ptsAtRisk = wizardControls.reduce((s,c)=>{const w=SPRS_WEIGHTS[c.id];return s+(w==='special'?5:w===0?0:w===undefined?1:w);},0);
   const score     = computeSPRS();
+  const resuming  = wizardStarted && wizardIndex > 0;
 
   if (total === 0) {
     return `<div class="wiz-wrap"><div class="wiz-done">
@@ -3935,12 +3300,12 @@ function buildWizardIntro() {
     </div></div>`;
   }
 
-  const scopeDone = isScopeDone();
+  const ctaBtn = resuming
+    ? `<button class="wiz-start-btn" onclick="continueWizard()">Continue Wizard — Gap ${wizardIndex + 1} of ${total} →</button>
+       <button class="wiz-restart-btn" onclick="startWizard()">↺ Start Over</button>`
+    : `<button class="wiz-start-btn" onclick="startWizard()">Start Reviewing My ${total} Gaps →</button>`;
+
   return `<div class="wiz-wrap">
-    <div class="scope-warning ${scopeDone?'hidden':''}" id="scopeWarnBanner">
-      ⚠️ <strong>System scope not completed.</strong> Some controls may not reflect your actual environment.
-      <button class="scope-btn secondary" style="margin-left:auto;padding:5px 12px;font-size:12px" onclick="setMode('scope')">Complete Scoping →</button>
-    </div>
     <div class="wiz-intro">
       <div class="wiz-intro-header">
         <h2>🧭 Gap Wizard</h2>
@@ -3954,7 +3319,7 @@ function buildWizardIntro() {
       <div class="wiz-intro-body">
         <p>The wizard will show you each incomplete control starting with the highest-value ones. For each control you'll see what it actually means in plain English, what "done" looks like for a small business, and specific first steps to take.</p>
         <p>As you work through gaps and mark controls complete in the <strong>Organization tab</strong>, your SPRS score updates in real time. You're currently at risk of losing <strong>${ptsAtRisk} SPRS points</strong> from the maximum score of 110.</p>
-        <button class="wiz-start-btn" onclick="startWizard()">Start Reviewing My ${total} Gaps →</button>
+        ${ctaBtn}
       </div>
     </div>
   </div>`;
@@ -3962,8 +3327,32 @@ function buildWizardIntro() {
 
 function startWizard() {
   wizardStarted = true;
+  wizardIndex   = 0;
+  wizardViewing = true;
+  saveWizardState();
   const container = document.getElementById('wizardView');
   if (container) container.innerHTML = buildWizardCard(0);
+}
+
+function continueWizard() {
+  wizardViewing = true;
+  const container = document.getElementById('wizardView');
+  if (container) container.innerHTML = buildWizardCard(wizardIndex);
+}
+
+// Returns true if all AOs for a control have been reviewed (or there are none)
+function allWizardAOsAnswered(controlId) {
+  const objs = OBJECTIVES[controlId] || [];
+  return objs.length === 0 || objs.every(([ltr]) => getAudit(controlId+'['+ltr+']') !== 'not-reviewed');
+}
+
+// Called after each AO change to keep the Mark Complete button in sync
+function updateWizardCompleteBtn(controlId) {
+  const btn = document.getElementById('wiz-complete-btn');
+  if (!btn) return;
+  const done = allWizardAOsAnswered(controlId);
+  btn.disabled = !done;
+  btn.title = done ? '' : 'Review all assessment objectives above before marking complete';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4366,6 +3755,17 @@ function buildWizardAOSection(controlId) {
   </div>`;
 }
 
+// ── Platform detection helpers (read scope answers from localStorage if available) ──
+const SCOPE_STORAGE_KEY = 'cmmc_scope_answers';
+function loadScopeAnswers() {
+  try { return JSON.parse(localStorage.getItem(SCOPE_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+}
+// Scope questionnaire is not active — tier detection returns null until scope is re-enabled
+function getM365Tier()      { return null; }
+function hasM365()          { return false; }
+function isM365Commercial() { return false; }
+function getGoogleTier()    { return null; }
+
 // ── Inject M365-specific steps into the Gap Wizard card ──
 function buildM365WizardSection(controlId) {
   const tier = getM365Tier();
@@ -4451,7 +3851,8 @@ function buildWizardCard(idx) {
           <div style="font-size:10px;margin-top:1px">${wizardControls.length - idx - 1} remaining</div>
         </div>
         <button class="wiz-btn" onclick="wizardNav(${idx+1})">Skip →</button>
-        <button class="wiz-btn success" onclick="wizardMarkComplete('${c.id}', ${idx})">✓ Mark Complete</button>
+        <button class="wiz-btn success" id="wiz-complete-btn" onclick="wizardMarkComplete('${c.id}', ${idx})"
+          ${!allWizardAOsAnswered(c.id) ? 'disabled title="Review all assessment objectives above before marking complete"' : ''}>✓ Mark Complete</button>
       </div>
     </div>
   </div>`;
@@ -4475,7 +3876,9 @@ function buildWizardDone() {
 }
 
 function wizardNav(idx) {
-  wizardIndex = Math.max(0, Math.min(idx, wizardControls.length));
+  wizardIndex   = Math.max(0, Math.min(idx, wizardControls.length));
+  wizardViewing = true;
+  saveWizardState();
   const container = document.getElementById('wizardView');
   if (!container) return;
   if (wizardIndex >= wizardControls.length) {
@@ -4492,6 +3895,7 @@ function wizardMarkComplete(ctrlId, idx) {
   // Stay at the same index (next control slides in), but cap at end
   wizardStarted = true;
   wizardIndex   = Math.min(idx, wizardControls.length - 1);
+  saveWizardState();
   const container = document.getElementById('wizardView');
   if (!container) return;
   if (wizardControls.length === 0 || wizardIndex < 0) {
@@ -4505,6 +3909,8 @@ function wizardMarkComplete(ctrlId, idx) {
 
 function wizardRestart() {
   wizardStarted = false;
+  wizardIndex   = 0;
+  saveWizardState();
   buildWizardView();
 }
 
