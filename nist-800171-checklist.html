@@ -3319,7 +3319,7 @@ function buildWizardIntro() {
   const fivePts   = wizardControls.filter(c=>SPRS_WEIGHTS[c.id]===5||SPRS_WEIGHTS[c.id]==='special').length;
   const ptsAtRisk = wizardControls.reduce((s,c)=>{const w=SPRS_WEIGHTS[c.id];return s+(w==='special'?5:w===0?0:w===undefined?1:w);},0);
   const score     = computeSPRS();
-  const resuming  = wizardStarted && wizardIndex > 0;
+  const resuming  = wizardStarted;
 
   if (total === 0) {
     return `<div class="wiz-wrap"><div class="wiz-done">
@@ -3330,7 +3330,7 @@ function buildWizardIntro() {
   }
 
   const ctaBtn = resuming
-    ? `<button class="wiz-start-btn" onclick="continueWizard()">Continue Wizard — Gap ${wizardIndex + 1} of ${total} →</button>
+    ? `<button class="wiz-start-btn" onclick="continueWizard()">Continue Wizard →</button>
        <button class="wiz-restart-btn" onclick="startWizard()">↺ Start Over</button>`
     : `<button class="wiz-start-btn" onclick="startWizard()">Start Reviewing My ${total} Gaps →</button>`;
 
