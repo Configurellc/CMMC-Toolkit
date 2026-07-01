@@ -1219,6 +1219,8 @@ function loadLocalData() {
 
 async function setOrg(id, val) {
   orgStatus[id] = val;
+  // Sync AOs to match: complete→met, not-started→not-reviewed, in-progress→leave alone
+  await syncAOsFromOrg(id, val);
   refreshOrgRow(id);
   updateAllProgress();
   if (!configured||!db) { saveLocalOrg(); return; }
@@ -1229,6 +1231,32 @@ async function setOrg(id, val) {
     if (error) throw error;
   } catch(e){ console.error(e); setConn('error','Save failed'); }
   finally { if (row) row.classList.remove('saving'); }
+}
+
+// Sync all AOs for a control when its status is changed directly in the Org tab.
+// Batches memory + DOM updates, then does a single Supabase upsert.
+async function syncAOsFromOrg(ctrlId, val) {
+  const objs = OBJECTIVES[ctrlId] || [];
+  if (!objs.length) return;
+  let target = null;
+  if (val === 'complete')     target = 'met';
+  else if (val === 'not-started') target = 'not-reviewed';
+  else return; // in-progress: don't touch AOs
+  // Update memory in bulk
+  objs.forEach(([ltr]) => { auditStatus[ctrlId+'['+ltr+']'] = target; });
+  // Refresh DOM
+  objs.forEach(([ltr]) => refreshObjRow(ctrlId+'['+ltr+']'));
+  updateAuditCtrlHeader(ctrlId);
+  updateOrgAOToggle(ctrlId);
+  updateWizardAOBanner(ctrlId);
+  updateWizardCompleteBtn(ctrlId);
+  // Persist — single batch write
+  if (!configured||!db) { saveLocalAudit(); return; }
+  const rows = objs.map(([ltr]) => ({objective_id:ctrlId+'['+ltr+']', status:target, updated_at:new Date().toISOString()}));
+  try {
+    const {error} = await db.from('assessment_objectives').upsert(rows, {onConflict:'objective_id'});
+    if (error) throw error;
+  } catch(e) { console.error(e); setConn('error','Save failed'); }
 }
 
 async function setAuditObj(id, val) {
@@ -1475,6 +1503,7 @@ function syncOrgFromAOs(ctrlId) {
   const statuses = objs.map(([l]) => getAudit(ctrlId+'['+l+']'));
   const anyAssessed = statuses.some(s => s !== 'not-reviewed');
   if (!anyAssessed) return; // nothing reviewed yet — don't override manual status
+  if (statuses.every(s => s === 'not-reviewed')) return; // bulk-reset in progress, skip
   const allDone = statuses.every(s => s === 'met' || s === 'not-applicable');
   const anyMet  = statuses.some(s => s === 'met');
   const derived = (allDone && anyMet) ? 'complete' : 'in-progress';
