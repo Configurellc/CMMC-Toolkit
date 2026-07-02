@@ -76,20 +76,81 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .loading-overlay{ position:fixed; inset:0; background:rgba(255,255,255,.85); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; gap:12px; }
 .loading-overlay.hidden{ display:none; }
 .spinner{ width:36px; height:36px; border:3px solid #e2e8f0; border-top-color:#6366f1; border-radius:50%; animation:spin .8s linear infinite; }
-/* ── Auth gate ── */
-.auth-gate{ position:fixed; inset:0; background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%); display:flex; align-items:center; justify-content:center; z-index:1000; }
+/* ── Auth gate / Splash page ── */
+.auth-gate{ position:fixed; inset:0; overflow-y:auto; background:#0f172a; z-index:1000; }
 .auth-gate.hidden{ display:none; }
-.auth-card{ background:#fff; border-radius:16px; padding:40px 44px; max-width:420px; width:90%; box-shadow:0 24px 80px rgba(0,0,0,.4); text-align:center; }
-.auth-logo{ margin-bottom:20px; }
-.auth-card h2{ font-size:20px; font-weight:800; color:#1e293b; margin:0 0 6px; }
-.auth-card p{ font-size:13px; color:#64748b; margin:0 0 24px; line-height:1.5; }
-.auth-input{ width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px; color:#1e293b; outline:none; box-sizing:border-box; transition:border-color .15s; }
+/* Nav */
+.splash-nav{ display:flex; align-items:center; justify-content:space-between; padding:18px 40px; border-bottom:1px solid rgba(255,255,255,.07); position:sticky; top:0; background:#0f172a; z-index:10; }
+.splash-nav-logo{ display:flex; align-items:center; gap:10px; }
+.splash-nav-logo span{ font-size:15px; font-weight:700; color:#fff; }
+.splash-nav-cta{ padding:8px 20px; background:#4f46e5; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+.splash-nav-cta:hover{ background:#4338ca; }
+/* Hero */
+.splash-hero{ padding:80px 40px 60px; max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 420px; gap:60px; align-items:center; }
+.splash-hero-badge{ display:inline-block; background:rgba(99,102,241,.2); color:#a5b4fc; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; border:1px solid rgba(99,102,241,.3); margin-bottom:20px; letter-spacing:.05em; text-transform:uppercase; }
+.splash-hero h1{ font-size:42px; font-weight:800; color:#fff; margin:0 0 16px; line-height:1.15; }
+.splash-hero h1 span{ color:#818cf8; }
+.splash-hero p{ font-size:16px; color:#94a3b8; line-height:1.7; margin:0 0 28px; }
+.splash-hero-stats{ display:flex; gap:28px; }
+.splash-stat{ text-align:left; }
+.splash-stat-num{ font-size:24px; font-weight:800; color:#fff; }
+.splash-stat-lbl{ font-size:11px; color:#64748b; margin-top:2px; }
+/* Access card */
+.splash-access-card{ background:#1e293b; border-radius:16px; padding:32px; border:1px solid rgba(255,255,255,.08); }
+.splash-access-card h3{ font-size:17px; font-weight:700; color:#fff; margin:0 0 6px; }
+.splash-access-card p{ font-size:13px; color:#94a3b8; margin:0 0 20px; line-height:1.5; }
+.auth-input{ width:100%; padding:12px 14px; background:#0f172a; border:1.5px solid rgba(255,255,255,.1); border-radius:8px; font-size:14px; color:#fff; outline:none; box-sizing:border-box; }
 .auth-input:focus{ border-color:#6366f1; }
-.auth-submit{ width:100%; margin-top:10px; padding:12px; background:#4f46e5; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; transition:background .15s; }
+.auth-input::placeholder{ color:#475569; }
+.auth-submit{ width:100%; margin-top:10px; padding:12px; background:#4f46e5; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
 .auth-submit:hover:not(:disabled){ background:#4338ca; }
-.auth-submit:disabled{ background:#94a3b8; cursor:not-allowed; }
-.auth-msg{ margin-top:14px; font-size:12px; min-height:18px; line-height:1.5; }
-.auth-footer{ margin-top:20px; font-size:11px; color:#94a3b8; }
+.auth-submit:disabled{ background:#334155; cursor:not-allowed; color:#64748b; }
+.auth-msg{ margin-top:12px; font-size:12px; min-height:16px; line-height:1.6; }
+.auth-divider{ text-align:center; font-size:11px; color:#475569; margin:16px 0; }
+/* Features */
+.splash-features{ background:#fff; padding:80px 40px; }
+.splash-features-inner{ max-width:1100px; margin:0 auto; }
+.splash-section-label{ font-size:11px; font-weight:700; color:#6366f1; letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; }
+.splash-section-title{ font-size:30px; font-weight:800; color:#0f172a; margin:0 0 10px; }
+.splash-section-sub{ font-size:15px; color:#64748b; margin:0 0 48px; }
+.splash-features-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.splash-feature-card{ padding:24px; border:1px solid #e2e8f0; border-radius:12px; }
+.splash-feature-icon{ width:40px; height:40px; background:#eef2ff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:14px; }
+.splash-feature-card h4{ font-size:15px; font-weight:700; color:#0f172a; margin:0 0 6px; }
+.splash-feature-card p{ font-size:13px; color:#64748b; margin:0; line-height:1.6; }
+/* Partners */
+.splash-partners{ background:#0f172a; padding:80px 40px; border-top:1px solid rgba(255,255,255,.06); }
+.splash-partners-inner{ max-width:1100px; margin:0 auto; }
+.splash-partner-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:48px 0; }
+.splash-partner-card{ background:#1e293b; border-radius:16px; padding:28px 32px; border:1px solid rgba(255,255,255,.08); }
+.splash-partner-card h4{ font-size:17px; font-weight:700; color:#fff; margin:0 0 10px; }
+.splash-partner-card p{ font-size:13px; color:#94a3b8; margin:0 0 18px; line-height:1.6; }
+.splash-partner-pill{ display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:14px; }
+.pill-c3pao{ background:rgba(34,197,94,.15); color:#4ade80; border:1px solid rgba(34,197,94,.25); }
+.pill-auditor{ background:rgba(251,191,36,.15); color:#fbbf24; border:1px solid rgba(251,191,36,.25); }
+.partner-benefit{ display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#94a3b8; margin-bottom:8px; }
+.partner-benefit::before{ content:'✓'; color:#4ade80; font-weight:700; flex-shrink:0; margin-top:1px; }
+/* Partner form */
+.splash-partner-form{ max-width:560px; margin:0 auto; background:#1e293b; border-radius:16px; padding:32px; border:1px solid rgba(255,255,255,.08); }
+.splash-partner-form h3{ font-size:18px; font-weight:700; color:#fff; margin:0 0 6px; text-align:center; }
+.splash-partner-form p{ font-size:13px; color:#94a3b8; text-align:center; margin:0 0 24px; }
+.partner-role-toggle{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+.role-btn{ padding:10px; border-radius:8px; border:1.5px solid rgba(255,255,255,.1); background:transparent; color:#64748b; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+.role-btn.active{ border-color:#4f46e5; background:#4f46e5; color:#fff; }
+/* Footer */
+.splash-footer{ background:#0a0f1e; padding:28px 40px; text-align:center; font-size:12px; color:#475569; border-top:1px solid rgba(255,255,255,.05); }
+/* Responsive */
+@media(max-width:900px){
+  .splash-hero{ grid-template-columns:1fr; padding:40px 20px; gap:32px; }
+  .splash-hero h1{ font-size:28px; }
+  .splash-features-grid{ grid-template-columns:1fr 1fr; padding:0; }
+  .splash-partner-grid{ grid-template-columns:1fr; }
+  .splash-nav{ padding:14px 20px; }
+  .splash-features,.splash-partners{ padding:50px 20px; }
+}
+@media(max-width:600px){
+  .splash-features-grid{ grid-template-columns:1fr; }
+}
 .signout-btn{ background:none; border:none; color:rgba(255,255,255,.5); font-size:11px; cursor:pointer; padding:2px 6px; border-radius:4px; }
 .signout-btn:hover{ color:#fff; background:rgba(255,255,255,.1); }
 @keyframes spin{ to{ transform:rotate(360deg); } }
@@ -697,26 +758,134 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 </head>
 <body>
 
-<!-- Auth gate — shown when user is not authenticated -->
+<!-- Splash / Auth page -->
 <div class="auth-gate hidden" id="authGate">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <svg width="44" height="48" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Nav -->
+  <nav class="splash-nav">
+    <div class="splash-nav-logo">
+      <svg width="28" height="32" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <polygon points="160,38 267,99 267,221 160,282 53,221 53,99" fill="#4f46e5"/>
-        <polygon points="160,62 245,111 245,209 160,258 75,209 75,111" fill="#1a1a2e"/>
+        <polygon points="160,62 245,111 245,209 160,258 75,209 75,111" fill="#0f172a"/>
         <polygon points="160,84 225,121 225,197 160,234 95,197 95,121" fill="#4f46e5"/>
         <text x="160" y="185" font-family="Arial" font-size="72" font-weight="900" fill="#fff" text-anchor="middle">C</text>
       </svg>
+      <span>CMMC Compliance Tracker</span>
     </div>
-    <h2>CMMC Compliance Tracker</h2>
-    <p>This tool is invite-only during the pilot program. Enter your email to access or request an invite.</p>
-    <input class="auth-input" id="authEmailInput" type="email" placeholder="your@email.com"
-      onkeydown="if(event.key==='Enter') submitAuthEmail()" autocomplete="email" />
-    <button class="auth-submit" id="authSubmitBtn" onclick="submitAuthEmail()">Get Access →</button>
-    <button class="auth-submit" id="authWaitlistBtn" onclick="joinWaitlist()" style="display:none;background:#0f172a;margin-top:8px">Join the Waitlist</button>
-    <div class="auth-msg" id="authMsg"></div>
-    <div class="auth-footer">Pilot access is by invitation only.<br>Questions? <a href="mailto:info@cmmctool.com" style="color:#6366f1">Contact us</a></div>
-  </div>
+    <button class="splash-nav-cta" onclick="document.getElementById('authEmailInput').focus();document.getElementById('authEmailInput').scrollIntoView({behavior:'smooth'})">Get Access →</button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="splash-hero">
+    <div>
+      <div class="splash-hero-badge">Pilot Program — Early Access</div>
+      <h1>CMMC compliance,<br><span>without the chaos.</span></h1>
+      <p>The free toolkit built for small defense contractors. Walk through every NIST SP 800-171 control, track your SPRS score, and generate the evidence your C3PAO needs — all in one place.</p>
+      <div class="splash-hero-stats">
+        <div class="splash-stat"><div class="splash-stat-num">110</div><div class="splash-stat-lbl">Controls tracked</div></div>
+        <div class="splash-stat"><div class="splash-stat-num">320</div><div class="splash-stat-lbl">Assessment objectives</div></div>
+        <div class="splash-stat"><div class="splash-stat-num">Free</div><div class="splash-stat-lbl">During pilot</div></div>
+      </div>
+    </div>
+    <div class="splash-access-card">
+      <h3>Request pilot access</h3>
+      <p>Enter your work email. Invited users get instant access — everyone else joins the waitlist.</p>
+      <input class="auth-input" id="authEmailInput" type="email" placeholder="you@company.com"
+        onkeydown="if(event.key==='Enter') submitAuthEmail()" autocomplete="email" />
+      <button class="auth-submit" id="authSubmitBtn" onclick="submitAuthEmail()">Get Access →</button>
+      <button class="auth-submit" id="authWaitlistBtn" onclick="joinWaitlist()" style="display:none;background:#0f3460;margin-top:8px">Join the Waitlist</button>
+      <div class="auth-msg" id="authMsg"></div>
+      <div class="auth-divider">Questions? <a href="mailto:info@cmmctool.com" style="color:#6366f1">Contact us</a></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="splash-features">
+    <div class="splash-features-inner">
+      <div class="splash-section-label">What's inside</div>
+      <div class="splash-section-title">Everything you need to pass Level 2</div>
+      <div class="splash-section-sub">Built around NIST SP 800-171 Rev 2. No spreadsheets, no guesswork.</div>
+      <div class="splash-features-grid">
+        <div class="splash-feature-card">
+          <div class="splash-feature-icon">🧭</div>
+          <h4>Gap Wizard</h4>
+          <p>Walk through every open control one at a time — plain English explanations, concrete first steps, highest-impact gaps first.</p>
+        </div>
+        <div class="splash-feature-card">
+          <div class="splash-feature-icon">📊</div>
+          <h4>SPRS Score Calculator</h4>
+          <p>See your exact SPRS score in real time as you work. Know what you'll report to SPRS before you click submit.</p>
+        </div>
+        <div class="splash-feature-card">
+          <div class="splash-feature-icon">🔍</div>
+          <h4>Auditor Mode</h4>
+          <p>All 320 NIST assessment objectives mapped and trackable. Met, Not Met, or N/A — with color-coded pass/fail headers.</p>
+        </div>
+        <div class="splash-feature-card">
+          <div class="splash-feature-icon">📄</div>
+          <h4>SSP &amp; POA&amp;M Templates</h4>
+          <p>System Security Plan and Plan of Action auto-populated from your answers. Ready to hand to your C3PAO.</p>
+        </div>
+        <div class="splash-feature-card">
+          <div class="splash-feature-icon">📋</div>
+          <h4>14 Policy Templates</h4>
+          <p>Every NIST-required policy pre-drafted and editable. Access Control, Incident Response, Media Protection and more.</p>
+        </div>
+        <div class="splash-feature-card">
+          <div class="splash-feature-icon">🔄</div>
+          <h4>Live Team Sync</h4>
+          <p>Your whole team works in the same tool. Status updates, AO checks, and progress sync in real time across every device.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Partners -->
+  <section class="splash-partners">
+    <div class="splash-partners-inner">
+      <div class="splash-section-label" style="color:#818cf8">For partners</div>
+      <div class="splash-section-title" style="color:#fff">C3PAOs &amp; Auditors</div>
+      <div class="splash-section-sub" style="color:#64748b">Join the platform — assess more clients, get more referrals.</div>
+      <div class="splash-partner-grid">
+        <div class="splash-partner-card">
+          <div class="splash-partner-pill pill-c3pao">C3PAO</div>
+          <h4>Certified Third-Party Assessors</h4>
+          <p>Use CMMC Compliance Tracker to conduct structured CMMC Level 2 assessments with your clients. All 320 objectives, evidence tracking, and audit-ready reports in one place.</p>
+          <div class="partner-benefit">Access client organizations directly through the platform</div>
+          <div class="partner-benefit">Auditor Mode maps every AO to NIST SP 800-171 Rev 2</div>
+          <div class="partner-benefit">Listed in our partner directory — clients find you</div>
+          <div class="partner-benefit">Early access to assessment workflow features</div>
+        </div>
+        <div class="splash-partner-card">
+          <div class="splash-partner-pill pill-auditor">Consultant / Auditor</div>
+          <h4>Compliance Consultants &amp; Auditors</h4>
+          <p>Get referrals from contractors who need help closing gaps. When a pilot user hits a wall, we point them to partners who can help — that's you.</p>
+          <div class="partner-benefit">Listed in our partner directory for client referrals</div>
+          <div class="partner-benefit">Use the tool with your clients at no cost during pilot</div>
+          <div class="partner-benefit">Co-marketing opportunities as the community grows</div>
+          <div class="partner-benefit">Direct line to product feedback and feature requests</div>
+        </div>
+      </div>
+      <!-- Partner signup form -->
+      <div class="splash-partner-form">
+        <h3>Become a partner</h3>
+        <p>Tell us who you are and we'll reach out with next steps.</p>
+        <div class="partner-role-toggle">
+          <button class="role-btn active" id="roleC3pao" onclick="setPartnerRole('c3pao')">✓ C3PAO</button>
+          <button class="role-btn" id="roleConsultant" onclick="setPartnerRole('consultant')">Consultant / Auditor</button>
+        </div>
+        <input class="auth-input" id="partnerEmail" type="email" placeholder="you@company.com" style="margin-bottom:10px" />
+        <input class="auth-input" id="partnerOrg" type="text" placeholder="Organization name" style="margin-bottom:10px" />
+        <button class="auth-submit" id="partnerSubmitBtn" onclick="joinPartners()">Apply as Partner →</button>
+        <div class="auth-msg" id="partnerMsg"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="splash-footer">
+    © 2025 CMMC Compliance Tracker · Pilot Program · <a href="mailto:info@cmmctool.com" style="color:#6366f1">info@cmmctool.com</a>
+  </footer>
+
 </div>
 
 <div class="loading-overlay" id="loadingOverlay">
@@ -1242,6 +1411,34 @@ async function joinWaitlist() {
   }
   msg.innerHTML = `<span style="color:#22c55e">✓ You're on the list! We'll email <strong>${email}</strong> when access opens.</span>`;
   waitlistBtn.textContent = "You're on the list!";
+}
+
+let partnerRole = 'c3pao';
+function setPartnerRole(role) {
+  partnerRole = role;
+  document.getElementById('roleC3pao').classList.toggle('active', role === 'c3pao');
+  document.getElementById('roleConsultant').classList.toggle('active', role === 'consultant');
+  document.getElementById('roleC3pao').textContent      = (role === 'c3pao'       ? '✓ ' : '') + 'C3PAO';
+  document.getElementById('roleConsultant').textContent = (role === 'consultant'  ? '✓ ' : '') + 'Consultant / Auditor';
+}
+
+async function joinPartners() {
+  const email = document.getElementById('partnerEmail').value.trim().toLowerCase();
+  const org   = document.getElementById('partnerOrg').value.trim();
+  const btn   = document.getElementById('partnerSubmitBtn');
+  const msg   = document.getElementById('partnerMsg');
+  if (!email || !email.includes('@')) { msg.innerHTML = '<span style="color:#ef4444">Please enter a valid email address.</span>'; return; }
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const { error } = await db.from('partner_inquiries').upsert(
+    { email, org, role: partnerRole, submitted_at: new Date().toISOString() },
+    { onConflict: 'email' }
+  );
+  if (error) {
+    msg.innerHTML = '<span style="color:#ef4444">Something went wrong. Please try again.</span>';
+    btn.disabled = false; btn.textContent = 'Apply as Partner →'; return;
+  }
+  msg.innerHTML = '<span style="color:#4ade80">✓ Application received! We\'ll be in touch within 2 business days.</span>';
+  btn.textContent = 'Applied!';
 }
 
 async function signOut() {
