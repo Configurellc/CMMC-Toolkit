@@ -58,6 +58,20 @@ CREATE POLICY "Anyone can join waitlist"
 CREATE POLICY "Anyone can update their waitlist row"
   ON waitlist FOR UPDATE USING (true);
 
+-- ── Partner inquiries ─────────────────────────────────────
+-- C3PAOs and consultants who apply via the splash page
+CREATE TABLE IF NOT EXISTS partner_inquiries (
+  email        TEXT PRIMARY KEY,
+  org          TEXT,
+  role         TEXT,   -- 'c3pao' or 'consultant'
+  submitted_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE partner_inquiries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can submit partner inquiry"
+  ON partner_inquiries FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update their partner inquiry"
+  ON partner_inquiries FOR UPDATE USING (true);
+
 -- ── Checklist status (user-scoped) ───────────────────────
 DROP TABLE IF EXISTS checklist_status;
 CREATE TABLE checklist_status (
