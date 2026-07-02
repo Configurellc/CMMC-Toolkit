@@ -4273,6 +4273,8 @@ function tourNav(idx) {
 }
 
 function startTour() {
+  // Never show tour while auth gate is visible
+  if (!document.getElementById('authGate').classList.contains('hidden')) return;
   tourStep = 0;
   document.getElementById('tourBackdrop').classList.remove('hidden');
   buildTourCard();
