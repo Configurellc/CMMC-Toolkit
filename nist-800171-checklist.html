@@ -76,6 +76,22 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .loading-overlay{ position:fixed; inset:0; background:rgba(255,255,255,.85); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; gap:12px; }
 .loading-overlay.hidden{ display:none; }
 .spinner{ width:36px; height:36px; border:3px solid #e2e8f0; border-top-color:#6366f1; border-radius:50%; animation:spin .8s linear infinite; }
+/* ── Auth gate ── */
+.auth-gate{ position:fixed; inset:0; background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.auth-gate.hidden{ display:none; }
+.auth-card{ background:#fff; border-radius:16px; padding:40px 44px; max-width:420px; width:90%; box-shadow:0 24px 80px rgba(0,0,0,.4); text-align:center; }
+.auth-logo{ margin-bottom:20px; }
+.auth-card h2{ font-size:20px; font-weight:800; color:#1e293b; margin:0 0 6px; }
+.auth-card p{ font-size:13px; color:#64748b; margin:0 0 24px; line-height:1.5; }
+.auth-input{ width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px; color:#1e293b; outline:none; box-sizing:border-box; transition:border-color .15s; }
+.auth-input:focus{ border-color:#6366f1; }
+.auth-submit{ width:100%; margin-top:10px; padding:12px; background:#4f46e5; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; transition:background .15s; }
+.auth-submit:hover:not(:disabled){ background:#4338ca; }
+.auth-submit:disabled{ background:#94a3b8; cursor:not-allowed; }
+.auth-msg{ margin-top:14px; font-size:12px; min-height:18px; line-height:1.5; }
+.auth-footer{ margin-top:20px; font-size:11px; color:#94a3b8; }
+.signout-btn{ background:none; border:none; color:rgba(255,255,255,.5); font-size:11px; cursor:pointer; padding:2px 6px; border-radius:4px; }
+.signout-btn:hover{ color:#fff; background:rgba(255,255,255,.1); }
 @keyframes spin{ to{ transform:rotate(360deg); } }
 .loading-text{ font-size:13px; color:#64748b; }
 
@@ -681,6 +697,28 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 </head>
 <body>
 
+<!-- Auth gate — shown when user is not authenticated -->
+<div class="auth-gate hidden" id="authGate">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg width="44" height="48" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="160,38 267,99 267,221 160,282 53,221 53,99" fill="#4f46e5"/>
+        <polygon points="160,62 245,111 245,209 160,258 75,209 75,111" fill="#1a1a2e"/>
+        <polygon points="160,84 225,121 225,197 160,234 95,197 95,121" fill="#4f46e5"/>
+        <text x="160" y="185" font-family="Arial" font-size="72" font-weight="900" fill="#fff" text-anchor="middle">C</text>
+      </svg>
+    </div>
+    <h2>CMMC Compliance Tracker</h2>
+    <p>This tool is invite-only during the pilot program. Enter your email to access or request an invite.</p>
+    <input class="auth-input" id="authEmailInput" type="email" placeholder="your@email.com"
+      onkeydown="if(event.key==='Enter') submitAuthEmail()" autocomplete="email" />
+    <button class="auth-submit" id="authSubmitBtn" onclick="submitAuthEmail()">Get Access →</button>
+    <button class="auth-submit" id="authWaitlistBtn" onclick="joinWaitlist()" style="display:none;background:#0f172a;margin-top:8px">Join the Waitlist</button>
+    <div class="auth-msg" id="authMsg"></div>
+    <div class="auth-footer">Pilot access is by invitation only.<br>Questions? <a href="mailto:info@cmmctool.com" style="color:#6366f1">Contact us</a></div>
+  </div>
+</div>
+
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">Loading checklist…</div>
@@ -734,6 +772,7 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
         <div class="conn-dot"></div>
         <span id="connLabel">💾 Local Mode</span>
       </div>
+      <button class="signout-btn" id="signoutBtn" style="display:none" onclick="signOut()">Sign out</button>
     </div>
   </div>
   <div class="prog-section">
@@ -1131,6 +1170,7 @@ let orgStatus = {};      // control_id → not-started|in-progress|complete
 let auditStatus = {};    // objective_id → not-reviewed|met|not-met|not-applicable
 let db = null;
 let configured = false;
+let currentUser = null;
 let currentMode = 'wizard';
 let orgFilter = 'all';
 let auditFilter = 'all';
@@ -1153,52 +1193,139 @@ function setConn(state, label) {
   l.textContent = label;
 }
 
-async function initSupabase() {
-  if (!isConfigured()) {
-    loadLocalData();
-    document.getElementById('loadingOverlay').classList.add('hidden');
-    setConn('connecting', '💾 Local Mode');
-    buildOrgView();
-    buildAuditView();
-    updateAllProgress();
-    setMode('wizard');
-    return;
-  }
-  configured = true;
-  try {
-    const { createClient } = supabase;
-    db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ── Auth gate helpers ──
+function showAuthGate() {
+  document.getElementById('authGate').classList.remove('hidden');
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('signoutBtn').style.display = 'none';
+  setTimeout(() => document.getElementById('authEmailInput').focus(), 100);
+}
+function hideAuthGate() {
+  document.getElementById('authGate').classList.add('hidden');
+}
 
+async function submitAuthEmail() {
+  const input       = document.getElementById('authEmailInput');
+  const btn         = document.getElementById('authSubmitBtn');
+  const waitlistBtn = document.getElementById('authWaitlistBtn');
+  const msg         = document.getElementById('authMsg');
+  const email       = input.value.trim().toLowerCase();
+  if (!email || !email.includes('@')) { msg.innerHTML = '<span style="color:#ef4444">Please enter a valid email address.</span>'; return; }
+  btn.disabled = true; btn.textContent = 'Checking…'; msg.textContent = '';
+  waitlistBtn.style.display = 'none';
+  // Check allowlist
+  const { data, error } = await db.from('pilot_allowlist').select('email').eq('email', email).maybeSingle();
+  if (error || !data) {
+    msg.innerHTML = `<span style="color:#ef4444">⚠️ <strong>${email}</strong> is not on the pilot list yet.</span><br><span style="color:#64748b;font-size:12px">Join the waitlist and we'll notify you when access opens.</span>`;
+    btn.disabled = false; btn.textContent = 'Get Access →';
+    waitlistBtn.style.display = 'block'; return;
+  }
+  // Send magic link
+  const { error: otpErr } = await db.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  if (otpErr) {
+    msg.innerHTML = '<span style="color:#ef4444">Something went wrong. Please try again.</span>';
+    btn.disabled = false; btn.textContent = 'Get Access →'; return;
+  }
+  msg.innerHTML = `<span style="color:#22c55e">✓ Check your inbox — we sent a sign-in link to <strong>${email}</strong></span>`;
+  btn.textContent = 'Link sent!';
+}
+
+async function joinWaitlist() {
+  const email       = document.getElementById('authEmailInput').value.trim().toLowerCase();
+  const waitlistBtn = document.getElementById('authWaitlistBtn');
+  const msg         = document.getElementById('authMsg');
+  waitlistBtn.disabled = true; waitlistBtn.textContent = 'Joining…';
+  const { error } = await db.from('waitlist').upsert({ email, signed_up_at: new Date().toISOString() }, { onConflict: 'email' });
+  if (error) {
+    msg.innerHTML = '<span style="color:#ef4444">Something went wrong. Please try again.</span>';
+    waitlistBtn.disabled = false; waitlistBtn.textContent = 'Join the Waitlist'; return;
+  }
+  msg.innerHTML = `<span style="color:#22c55e">✓ You're on the list! We'll email <strong>${email}</strong> when access opens.</span>`;
+  waitlistBtn.textContent = "You're on the list!";
+}
+
+async function signOut() {
+  await db.auth.signOut();
+  orgStatus = {}; auditStatus = {};
+  currentUser = null;
+  showAuthGate();
+}
+
+async function loadUserData() {
+  try {
+    const uid = currentUser.id;
     const [r1, r2] = await Promise.all([
-      db.from('checklist_status').select('control_id,status'),
-      db.from('assessment_objectives').select('objective_id,status')
+      db.from('checklist_status').select('control_id,status').eq('user_id', uid),
+      db.from('assessment_objectives').select('objective_id,status').eq('user_id', uid)
     ]);
     if (r1.error) throw r1.error;
     if (r2.error) throw r2.error;
     r1.data.forEach(r => { orgStatus[r.control_id] = r.status; });
     r2.data.forEach(r => { auditStatus[r.objective_id] = r.status; });
-
-    // Real-time sync
-    db.channel('rt_all')
-      .on('postgres_changes',{event:'*',schema:'public',table:'checklist_status'}, p => {
+    // Real-time sync scoped to this user
+    db.channel('rt_user_'+uid)
+      .on('postgres_changes',{event:'*',schema:'public',table:'checklist_status',filter:`user_id=eq.${uid}`}, p => {
         if (p.new?.control_id) { orgStatus[p.new.control_id] = p.new.status; refreshOrgRow(p.new.control_id); updateAllProgress(); }
       })
-      .on('postgres_changes',{event:'*',schema:'public',table:'assessment_objectives'}, p => {
+      .on('postgres_changes',{event:'*',schema:'public',table:'assessment_objectives',filter:`user_id=eq.${uid}`}, p => {
         if (p.new?.objective_id) { auditStatus[p.new.objective_id] = p.new.status; refreshObjRow(p.new.objective_id); updateAllProgress(); }
       })
       .subscribe(s => {
-        if (s==='SUBSCRIBED') setConn('live','Live — synced');
+        if (s==='SUBSCRIBED') setConn('live', currentUser.email ? '● '+currentUser.email.split('@')[0] : 'Live — synced');
         else if (s==='CLOSED'||s==='CHANNEL_ERROR') setConn('error','Disconnected');
       });
   } catch(err) {
-    console.error(err);
-    setConn('error','Connection error');
+    console.error(err); setConn('error','Connection error');
   }
   try { collapsedDomains = new Set(JSON.parse(localStorage.getItem('nist_collapsed')||'[]')); } catch(e){}
-  buildOrgView();
-  buildAuditView();
-  updateAllProgress();
+  buildOrgView(); buildAuditView(); updateAllProgress();
+  hideAuthGate();
   document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('signoutBtn').style.display = '';
+  setMode('wizard');
+}
+
+async function initSupabase() {
+  // ?preview=auth forces the auth gate visible for local UI testing
+  if (new URLSearchParams(window.location.search).get('preview') === 'auth') {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('authGate').classList.remove('hidden');
+    setTimeout(() => document.getElementById('authEmailInput').focus(), 100);
+    return;
+  }
+  // Local mode — no auth needed
+  if (!isConfigured()) {
+    loadLocalData();
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    setConn('connecting', '💾 Local Mode');
+    buildOrgView(); buildAuditView(); updateAllProgress(); setMode('wizard');
+    return;
+  }
+  configured = true;
+  const { createClient } = supabase;
+  db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Handle magic link redirect and session changes
+  db.auth.onAuthStateChange(async (event, session) => {
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !currentUser) {
+      currentUser = session.user;
+      orgStatus = {}; auditStatus = {};
+      await loadUserData();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      orgStatus = {}; auditStatus = {};
+      showAuthGate();
+    }
+  });
+
+  // Check for existing session
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadUserData();
+  } else {
+    showAuthGate();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1223,11 +1350,11 @@ async function setOrg(id, val) {
   await syncAOsFromOrg(id, val);
   refreshOrgRow(id);
   updateAllProgress();
-  if (!configured||!db) { saveLocalOrg(); return; }
+  if (!configured||!db||!currentUser) { saveLocalOrg(); return; }
   const row = document.getElementById('org-row-'+id);
   if (row) row.classList.add('saving');
   try {
-    const {error} = await db.from('checklist_status').upsert({control_id:id,status:val,updated_at:new Date().toISOString()},{onConflict:'control_id'});
+    const {error} = await db.from('checklist_status').upsert({control_id:id,user_id:currentUser.id,status:val,updated_at:new Date().toISOString()},{onConflict:'control_id,user_id'});
     if (error) throw error;
   } catch(e){ console.error(e); setConn('error','Save failed'); }
   finally { if (row) row.classList.remove('saving'); }
@@ -1251,10 +1378,10 @@ async function syncAOsFromOrg(ctrlId, val) {
   updateWizardAOBanner(ctrlId);
   updateWizardCompleteBtn(ctrlId);
   // Persist — single batch write
-  if (!configured||!db) { saveLocalAudit(); return; }
-  const rows = objs.map(([ltr]) => ({objective_id:ctrlId+'['+ltr+']', status:target, updated_at:new Date().toISOString()}));
+  if (!configured||!db||!currentUser) { saveLocalAudit(); return; }
+  const rows = objs.map(([ltr]) => ({objective_id:ctrlId+'['+ltr+']', user_id:currentUser.id, status:target, updated_at:new Date().toISOString()}));
   try {
-    const {error} = await db.from('assessment_objectives').upsert(rows, {onConflict:'objective_id'});
+    const {error} = await db.from('assessment_objectives').upsert(rows, {onConflict:'objective_id,user_id'});
     if (error) throw error;
   } catch(e) { console.error(e); setConn('error','Save failed'); }
 }
@@ -1269,11 +1396,11 @@ async function setAuditObj(id, val) {
   updateWizardAOBanner(id.replace(/\[[a-z]\]$/,''));
   updateWizardCompleteBtn(id.replace(/\[[a-z]\]$/,''));
   updateAllProgress();
-  if (!configured||!db) { saveLocalAudit(); return; }
+  if (!configured||!db||!currentUser) { saveLocalAudit(); return; }
   const row = document.getElementById('obj-row-'+id);
   if (row) row.classList.add('saving');
   try {
-    const {error} = await db.from('assessment_objectives').upsert({objective_id:id,status:val,updated_at:new Date().toISOString()},{onConflict:'objective_id'});
+    const {error} = await db.from('assessment_objectives').upsert({objective_id:id,user_id:currentUser.id,status:val,updated_at:new Date().toISOString()},{onConflict:'objective_id,user_id'});
     if (error) throw error;
   } catch(e){ console.error(e); setConn('error','Save failed'); }
   finally { if (row) row.classList.remove('saving'); }
@@ -1285,13 +1412,13 @@ async function resetAll() {
   if (currentMode === 'org') {
     orgStatus = {};
     CONTROLS.forEach(c => refreshOrgRow(c.id));
-    if (configured && db) await db.from('checklist_status').delete().neq('control_id','__none__');
+    if (configured && db && currentUser) await db.from('checklist_status').delete().eq('user_id', currentUser.id);
     else saveLocalOrg();
   } else {
     auditStatus = {};
     ALL_OBJECTIVES.forEach(o => refreshObjRow(o.id));
     CONTROLS.forEach(c => updateAuditCtrlHeader(c.id));
-    if (configured && db) await db.from('assessment_objectives').delete().neq('objective_id','__none__');
+    if (configured && db && currentUser) await db.from('assessment_objectives').delete().eq('user_id', currentUser.id);
     else saveLocalAudit();
   }
   updateAllProgress();
